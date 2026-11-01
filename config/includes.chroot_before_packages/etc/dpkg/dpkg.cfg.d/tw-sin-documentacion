@@ -1,9 +1,0 @@
-# Menos espacio: sin manuales ni traducciones ajenas. Las licencias se conservan.
-path-exclude=/usr/share/man/*
-path-exclude=/usr/share/info/*
-path-exclude=/usr/share/doc/*
-path-include=/usr/share/doc/*/copyright
-path-exclude=/usr/share/locale/*
-path-include=/usr/share/locale/es*
-path-include=/usr/share/locale/en*
-path-include=/usr/share/locale/locale.alias

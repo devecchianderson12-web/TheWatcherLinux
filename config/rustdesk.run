@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/share/rustdesk/rustdesk --service 2>&1

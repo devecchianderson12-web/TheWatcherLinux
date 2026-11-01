@@ -1,193 +1,124 @@
 #!/usr/bin/env bash
-# Construye la ISO de TheWatcher Linux desde cero. Uso: sudo bash build.sh [--clean]
+# Construye TheWatcher Linux modificando la ISO oficial de antiX 26.1 Full (x64).
+# Uso, como root en Debian 13 o WSL2: bash build.sh "/ruta/antiX-26.1 Full.iso"
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK="${TW_WORK:-$ROOT/work}"
+SRC="${1:?Indicá la ruta de la ISO de antiX}"
+sed -i 's/\r$//' "$ROOT/versions.env" "$ROOT"/config/*
+# shellcheck disable=SC1091
+. "$ROOT/versions.env"
+W="${TW_WORK:-/root/tw-antix}"
 OUT="$ROOT/out"
-CACHE="$ROOT/cache"
-LOG="$OUT/build.log"
-STEP=0
+F="$W/fs"
+ISO="$OUT/thewatcher-linux-$DISTRO_VERSION-amd64.iso"
+export DEBIAN_FRONTEND=noninteractive
 
-say()  { STEP=$((STEP + 1)); printf '\n\033[1;36m[%02d] %s\033[0m\n' "$STEP" "$1"; }
-die()  { printf '\n\033[1;31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
-trap 'printf "\n\033[1;31mLa compilación falló en la línea %s. Ver %s\033[0m\n" "$LINENO" "$LOG" >&2' ERR
+say() { printf '\n\033[1;36m== %s\033[0m\n' "$1"; }
+die() { printf '\033[1;31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
+unbind() { for m in dev/pts dev sys proc; do mountpoint -q "$F/$m" && umount -l "$F/$m"; done; return 0; }
+trap unbind EXIT
 
-# Un ZIP abierto en Windows puede dejar CRLF o quitar los permisos de ejecución
-normalize_tree() {
-  find "$ROOT/config" -type f -exec sed -i 's/\r$//' {} + -exec chmod 644 {} +
-  find "$ROOT/config" -type d -exec chmod 755 {} +
-  find "$ROOT" -maxdepth 2 -type f -name '*.sh' -not -path "$ROOT/work/*" -exec sed -i 's/\r$//' {} + -exec chmod 755 {} +
-}
+[ "$(id -u)" -eq 0 ] || die "Ejecutá el script como root"
+[ -f "$SRC" ] || die "No existe $SRC"
+echo "$ANTIX_SHA256  $SRC" | sha256sum -c --status || die "La ISO no es antiX 26.1 Full x64 (SHA-256 distinto)"
+echo "$THEWATCHER_SHA256  $ROOT/packages/$THEWATCHER_DEB" | sha256sum -c --status || die "packages/$THEWATCHER_DEB no coincide con versions.env"
 
-check_host() {
-  [ "$(id -u)" -eq 0 ] || die "Ejecutá el script como root: sudo bash build.sh"
-  [ "$(uname -m)" = x86_64 ] || die "Hace falta un sistema x86_64 para compilar"
-  case "$ROOT" in
-    /mnt/[a-z]/*) die "No compiles en un disco de Windows ($ROOT): copiá la carpeta dentro de Linux o usá build.ps1" ;;
-  esac
-  mkdir -p "$OUT" "$CACHE" "$WORK"
-  local fs_type free ram
-  fs_type="$(stat -f -c %T "$WORK")"
-  case "$fs_type" in ntfs*|fuseblk|vfat|msdos|9p|v9fs|drvfs) die "El sistema de archivos $fs_type no sirve para un chroot: usá ext4" ;; esac
-  free="$(df -BG --output=avail "$WORK" | tail -1 | tr -dc 0-9)"
-  [ "$free" -ge 20 ] || die "Hacen falta 20 GB libres en $WORK y hay $free GB"
-  ram="$(awk '/MemTotal/ {print int($2 / 1048576)}' /proc/meminfo)"
-  [ "$ram" -ge 2 ] || echo "Aviso: con menos de 2 GB de RAM la compresión será muy lenta"
-}
+say "Herramientas"
+apt-get update -qq
+apt-get install -y -qq --no-install-recommends squashfs-tools xorriso curl ca-certificates dpkg-dev >/dev/null
 
-host_is_debian13() {
-  [ -r /etc/os-release ] || return 1
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  [ "${ID:-}" = debian ] && [ "${VERSION_CODENAME:-}" = "$DEBIAN_SUITE" ]
-}
+say "RustDesk"
+mkdir -p "$ROOT/cache" "$OUT"
+RD="$ROOT/cache/rustdesk-$RUSTDESK_VERSION-x86_64.deb"
+echo "$RUSTDESK_SHA256  $RD" | sha256sum -c --status 2>/dev/null || curl -fL --retry 5 -o "$RD" "$RUSTDESK_URL"
+echo "$RUSTDESK_SHA256  $RD" | sha256sum -c --status || die "SHA-256 de RustDesk incorrecto"
+# antiX no usa systemd y bloquea libsystemd0 por política. RustDesk la declara pero sus binarios no la enlazan.
+rm -rf "$W/rd"; mkdir -p "$W/rd"
+dpkg-deb -R "$RD" "$W/rd/d"
+sed -i 's/ libsystemd0,//' "$W/rd/d/DEBIAN/control"
+dpkg-deb --root-owner-group -Zxz -b "$W/rd/d" "$W/rd/rustdesk.deb" >/dev/null
 
-# live-build depende de la versión de Debian: en cualquier otro sistema con apt se compila dentro de un Debian 13 mínimo
-run_in_buildroot() {
-  command -v apt-get >/dev/null || die "Este sistema no usa apt. Compilá con Docker (ver README.md) o en Debian 13"
-  say "Sistema distinto de Debian 13: preparando un entorno de compilación Debian 13"
-  apt-get update
-  apt-get install -y debootstrap debian-archive-keyring
-  local br="$WORK/buildroot"
-  cleanup_buildroot() { umount -lf "$br/src" "$br/tw-work" "$br/dev/pts" "$br/dev" "$br/sys" "$br/proc" 2>/dev/null || true; }
-  cleanup_buildroot
-  if [ ! -x "$br/usr/bin/apt-get" ]; then
-    grep -q " $br/" /proc/mounts && die "Hay montajes activos en $br"
-    rm -rf "$br"
-    debootstrap --keyring=/usr/share/keyrings/debian-archive-keyring.gpg --variant=minbase --include=ca-certificates \
-      "$DEBIAN_SUITE" "$br" "$DEBIAN_MIRROR" /usr/share/debootstrap/scripts/sid
-  fi
-  cp -f /etc/resolv.conf "$br/etc/resolv.conf"
-  mkdir -p "$br/src" "$br/tw-work"
-  trap cleanup_buildroot EXIT
-  mount --bind "$ROOT" "$br/src"
-  mkdir -p "$WORK/inner"
-  mount --bind "$WORK/inner" "$br/tw-work"
-  mount -t proc proc "$br/proc"
-  mount -t sysfs sys "$br/sys"
-  mount --bind /dev "$br/dev"
-  mount --bind /dev/pts "$br/dev/pts"
-  chroot "$br" /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin HOME=/root LANG=C.UTF-8 \
-    TW_INSIDE=1 TW_WORK=/tw-work SGDB_KEY="${SGDB_KEY:-}" bash /src/build.sh
-}
+say "Extrayendo la ISO"
+unbind
+rm -rf "$F" "$W/iso"; mkdir -p "$W/iso"
+xorriso -osirrox on -indev "$SRC" -extract / "$W/iso" 2>/dev/null
+chmod -R u+w "$W/iso"
+unsquashfs -q -n -d "$F" "$W/iso/antiX/linuxfs" >/dev/null
 
-install_deps() {
-  say "Comprobando e instalando las herramientas de compilación"
-  local need=(live-build debootstrap xorriso squashfs-tools mtools dosfstools curl ca-certificates unzip binutils dpkg-dev)
-  local missing=()
-  for p in "${need[@]}"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'ok installed' || missing+=("$p"); done
-  if [ "${#missing[@]}" -gt 0 ]; then
-    echo "Instalando: ${missing[*]}"
-    apt-get update
-    apt-get install -y --no-install-recommends "${missing[@]}"
-  fi
-}
+say "Preparando el chroot"
+mount -t proc p "$F/proc"; mount -t sysfs s "$F/sys"; mount --bind /dev "$F/dev"; mount --bind /dev/pts "$F/dev/pts"
+cp -aL "$F/etc/resolv.conf" "$W/resolv.orig" 2>/dev/null || : > "$W/resolv.orig"
+rm -f "$F/etc/resolv.conf"; cp /etc/resolv.conf "$F/etc/resolv.conf"
+printf '#!/bin/sh\nexit 101\n' > "$F/usr/sbin/policy-rc.d"; chmod 755 "$F/usr/sbin/policy-rc.d"
+chroot "$F" sh -c 'apt-get update 2>&1 | tail -2' || true
 
-# Descarga a la caché y comprueba el SHA-256; una descarga rota nunca llega a la ISO
-fetch() {
-  local url="$1" sha="$2" file="$CACHE/$(basename "$1")"
-  if ! echo "$sha  $file" | sha256sum -c --status 2>/dev/null; then
-    curl -fL --retry 5 --retry-delay 3 -o "$file.part" "$url"
-    mv "$file.part" "$file"
-    echo "$sha  $file" | sha256sum -c --status || { rm -f "$file"; die "SHA-256 incorrecto: $url"; }
-  fi
-  echo "Verificado: $(basename "$file")"
-}
+say "Quitando lo innecesario"
+# wl.ko (Wi-Fi Broadcom) se compiló con DKMS: se conserva sin dejar DKMS ni cabeceras
+for k in "$F"/lib/modules/*; do mkdir -p "$W/wl/$(basename "$k")"; cp "$k/updates/dkms/wl.ko" "$W/wl/$(basename "$k")/"; done
+P="$(tr '\n' ' ' < "$ROOT/config/purge.list")"
+chroot "$F" bash -c "set -f; apt-get -s purge --autoremove $P" | awk '/^Purg/{print $2}' > "$W/purge.sim"
+for keep in antix-installer connman cmst slimski icewm zzzfm firefox-esr deb-installer x11-xserver-utils; do
+  grep -qx "$keep" "$W/purge.sim" && die "La purga quitaría $keep"
+done
+chroot "$F" bash -c "set -f; apt-get -y purge --autoremove $P" >/dev/null
+for k in "$W"/wl/*; do v="$(basename "$k")"; mkdir -p "$F/lib/modules/$v/updates/dkms"; cp "$k/wl.ko" "$F/lib/modules/$v/updates/dkms/"; chroot "$F" depmod "$v"; done
+# Sin esto, al iniciar sesión desktop-menu pide contraseña para limpiar los accesos de lo que se quitó
+chroot "$F" bash -c 'dpkg-divert --list | grep "by antix26-desktop-files" | while read -r _ _ f _ t _; do
+  if [ ! -e "$t" ]; then [ -L "$f" ] && rm -f "$f"; dpkg-divert --package antix26-desktop-files --rename --remove "$f" >/dev/null; fi; done'
+find -L "$F/usr/share/applications" -maxdepth 1 -type l -delete
 
-configure_lb() {
-  say "Configurando la distribución"
-  local lb="$WORK/lb"
-  # Los paquetes ya descargados se conservan entre compilaciones
-  [ ! -d "$lb/cache" ] || { rm -rf "$WORK/lb-cache"; mv "$lb/cache" "$WORK/lb-cache"; }
-  [ -d "$lb/config" ] && (cd "$lb" && lb clean --all >/dev/null 2>&1 || true)
-  rm -rf "$lb"
-  mkdir -p "$lb"
-  [ ! -d "$WORK/lb-cache" ] || mv "$WORK/lb-cache" "$lb/cache"
-  cd "$lb"
-  lb config noauto \
-    --mode debian --system live --distribution "$DEBIAN_SUITE" --architecture amd64 \
-    --archive-areas "main contrib non-free non-free-firmware" \
-    --mirror-bootstrap "$DEBIAN_MIRROR" --mirror-chroot "$DEBIAN_MIRROR" --mirror-binary "$DEBIAN_MIRROR" \
-    --mirror-chroot-security "$DEBIAN_SECURITY_MIRROR" --mirror-binary-security "$DEBIAN_SECURITY_MIRROR" \
-    --security true --updates true --backports false \
-    --apt-recommends false --apt-indices false --cache-packages true \
-    --firmware-chroot false --firmware-binary false \
-    --linux-flavours amd64 --memtest none --loadlin false --win32-loader false --zsync false --source false --checksums sha256 \
-    --debian-installer live --debian-installer-gui true --debian-installer-distribution "$DEBIAN_SUITE" \
-    --chroot-squashfs-compression-type xz \
-    --image-name "$DISTRO_ID-$DISTRO_VERSION" \
-    --iso-application "$DISTRO_NAME" --iso-volume "THEWATCHER_${DISTRO_VERSION//./_}" --iso-publisher "$DISTRO_NAME" \
-    --bootappend-live "boot=live components quiet username=usuario hostname=thewatcher locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires"
-  cp -a "$ROOT/config/." "$lb/config/"
-  mkdir -p "$lb/config/packages.chroot"
-  # live-build solo toma archivos con el nombre *_amd64.deb
-  cp "$CACHE/$(basename "$RUSTDESK_URL")" "$lb/config/packages.chroot/rustdesk_${RUSTDESK_VERSION}_amd64.deb"
-  cp "$ROOT/packages/$THEWATCHER_DEB" "$lb/config/packages.chroot/"
-  find "$lb/config" -type f -path '*hooks*' -exec chmod 755 {} +
-  find "$lb/config/includes.chroot/usr/local" -type f -exec chmod 755 {} +
-  chmod 755 "$lb/config/includes.chroot/etc/X11/icewm/startup"
-}
+say "Idioma"
+sed -i -E 's/^([a-zA-Z])/# \1/; s/^# *(es_AR.UTF-8 UTF-8|es_ES.UTF-8 UTF-8|en_US.UTF-8 UTF-8)/\1/' "$F/etc/locale.gen"
+chroot "$F" locale-gen >/dev/null
+chroot "$F" update-locale LANG=es_AR.UTF-8
+sed -i 's#^linux /antiX/${kernel} quiet#linux /antiX/${kernel} quiet lang=es_AR#' "$W/iso/boot/grub/grub.cfg"
+grep -rl 'quiet' "$W/iso/boot/syslinux"/*.cfg 2>/dev/null | xargs -r sed -i 's/quiet/quiet lang=es_AR/'
 
-build_iso() {
-  say "Construyendo la ISO (entre 20 minutos y varias horas)"
-  cd "$WORK/lb"
-  lb build || die "lb build falló"
-}
+say "Instalando The Watcher y RustDesk"
+cp "$W/rd/rustdesk.deb" "$F/tmp/rustdesk.deb"
+cp "$ROOT/packages/$THEWATCHER_DEB" "$F/tmp/thewatcher.deb"
+# El postinst de RustDesk lee el PID 1 del anfitrión; si es systemd llama a systemctl, que antiX no tiene
+printf '#!/bin/sh\nexit 0\n' > "$F/usr/bin/systemctl"; chmod 755 "$F/usr/bin/systemctl"
+chroot "$F" apt-get -y --no-install-recommends install /tmp/rustdesk.deb /tmp/thewatcher.deb >/dev/null
+rm -f "$F/usr/bin/systemctl" "$F"/tmp/*.deb "$F/usr/lib/systemd/system/rustdesk.service"
+chroot "$F" sh -c 'apt-get -y --no-install-recommends --only-upgrade install firefox-esr 2>&1 | tail -1' || true
+ln -sf /usr/share/rustdesk/rustdesk "$F/usr/bin/rustdesk"
 
-verify_iso() {
-  say "Verificando la ISO"
-  local iso
-  iso="$(find "$WORK/lb" -maxdepth 1 -name '*.iso' | head -1)"
-  [ -n "$iso" ] || die "live-build terminó sin generar una ISO"
-  local size; size="$(stat -c %s "$iso")"
-  [ "$size" -gt 500000000 ] || die "La ISO mide solo $size bytes"
-  xorriso -indev "$iso" -find /live/filesystem.squashfs -- 2>/dev/null | grep -q filesystem.squashfs || die "La ISO no contiene el sistema"
-  xorriso -indev "$iso" -find /EFI -- 2>/dev/null | grep -q EFI || echo "Aviso: la ISO no trae arranque UEFI"
-  xorriso -indev "$iso" -find /install -- 2>/dev/null | grep -q install || echo "Aviso: la ISO no trae el instalador"
-  local list="$WORK/lb/chroot.packages.live"
-  for p in rustdesk thewatcher firefox-esr pcmanfm gdebi network-manager icewm; do
-    grep -q "^$p[[:space:]]" "$list" || die "Falta el paquete obligatorio $p en la ISO"
-  done
-  mv -f "$iso" "$OUT/"
-  cp -f "$list" "$OUT/paquetes-instalados.txt"
-  local final="$OUT/$(basename "$iso")"
-  (cd "$OUT" && sha256sum "$(basename "$final")" > "$(basename "$final").sha256")
-  say "Terminado"
-  echo "ISO:      $final"
-  echo "Tamaño:   $((size / 1048576)) MB"
-  echo "SHA-256:  $final.sha256"
-  echo "Paquetes: $OUT/paquetes-instalados.txt"
-  [ -z "${SUDO_UID:-}" ] || chown -R "$SUDO_UID:${SUDO_GID:-$SUDO_UID}" "$OUT" "$CACHE"
-}
+say "Servicios y escritorio"
+mkdir -p "$F/etc/sv/rustdesk"
+install -m 755 "$ROOT/config/rustdesk.run" "$F/etc/sv/rustdesk/run"
+ln -sf /etc/sv/rustdesk "$F/etc/runit/runsvdir/default/rustdesk"
+install -m 755 "$ROOT/config/rustdesk.init" "$F/etc/init.d/rustdesk"
+chroot "$F" update-rc.d rustdesk defaults >/dev/null 2>&1 || true
+for s in ssh rsync smartmontools bluetooth saned cups gpm; do
+  rm -f "$F/etc/runit/runsvdir/default/$s"
+  chroot "$F" update-rc.d "$s" disable >/dev/null 2>&1 || true
+done
+find "$F/etc/skel/.icewm" "$F/usr/share/antiX/localisation" -type f -name 'toolbar*' -exec cp "$ROOT/config/toolbar" {} \;
+sed -i 's/^LOAD_CONKY=.*/LOAD_CONKY="false"/' "$F/etc/skel/.desktop-session/desktop-session.conf"
+cp "$ROOT/config/90-tw.conf" "$F/etc/sysctl.d/90-tw.conf"
+if [ -n "${TW_TEST:-}" ]; then     # consola de root por el puerto serie: solo para tests/boot-test.py, nunca en una release
+  mkdir -p "$F/etc/sv/ttest"
+  printf '#!/bin/sh\nexec setsid bash -i </dev/ttyS0 >/dev/ttyS0 2>&1\n' > "$F/etc/sv/ttest/run"; chmod 755 "$F/etc/sv/ttest/run"
+  ln -sf /etc/sv/ttest "$F/etc/runit/runsvdir/default/ttest"
+fi
+chroot "$F" dpkg-query -W > "$OUT/paquetes-instalados.txt"
+chroot "$F" bash -c 'apt-get clean; rm -rf /var/lib/apt/lists/* /root/.bash_history; dpkg --audit'
+rm -f "$F/usr/sbin/policy-rc.d" "$F/etc/resolv.conf"
+cp "$W/resolv.orig" "$F/etc/resolv.conf"
+unbind
 
-main() {
-  sed -i 's/\r$//' "$ROOT/versions.env" 2>/dev/null || true
-  # shellcheck disable=SC1091
-  . "$ROOT/versions.env"
-  if [ "${1:-}" = --clean ]; then
-    grep -q " $ROOT/work/" /proc/mounts && die "Hay montajes activos en work/: reiniciá antes de limpiar"
-    rm -rf "${ROOT:?}/work" "${ROOT:?}/out"
-  fi
-  check_host
-  normalize_tree
-  : > "$LOG"
-  exec > >(tee -a "$LOG") 2>&1
-  if [ -z "${TW_INSIDE:-}" ] && ! host_is_debian13; then
-    run_in_buildroot
-    local iso; iso="$(find "$OUT" -maxdepth 1 -name '*.iso' | head -1)"
-    [ -n "$iso" ] || die "La compilación no generó ninguna ISO"
-    echo "ISO: $iso"
-    exit 0
-  fi
-  install_deps
-  say "Preparando el entorno de compilación"
-  say "Descargando los componentes desde sus fuentes oficiales"
-  fetch "$RUSTDESK_URL" "$RUSTDESK_SHA256"
-  echo "$THEWATCHER_SHA256  $ROOT/packages/$THEWATCHER_DEB" | sha256sum -c --status || die "packages/$THEWATCHER_DEB falta o no coincide con versions.env"
-  configure_lb
-  build_iso
-  verify_iso
-}
-
-main "$@"
+say "Reconstruyendo la ISO"
+rm -f "$W/iso/antiX/linuxfs" "$ISO"
+mksquashfs "$F" "$W/iso/antiX/linuxfs" -comp zstd -b 262144 -noappend -quiet -no-progress -wildcards -e 'tmp/*' >/dev/null
+(cd "$W/iso/antiX" && md5sum linuxfs > linuxfs.md5)
+echo "UncompressedSizeKB=$(du -sk "$F" | cut -f1)" > "$W/iso/antiX/linuxfs.info"
+xorriso -indev "$SRC" -outdev "$ISO" -boot_image any replay -volid antiX-Live -compliance no_emul_toc \
+  -update "$W/iso/antiX/linuxfs" /antiX/linuxfs -update "$W/iso/antiX/linuxfs.md5" /antiX/linuxfs.md5 \
+  -update "$W/iso/antiX/linuxfs.info" /antiX/linuxfs.info -update "$W/iso/boot/grub/grub.cfg" /boot/grub/grub.cfg \
+  -update_r "$W/iso/boot/syslinux" /boot/syslinux -commit 2>&1 | tail -1
+for p in rustdesk thewatcher firefox-esr connman antix-installer; do grep -q "^$p[[:space:]:]" "$OUT/paquetes-instalados.txt" || die "Falta $p"; done
+xorriso -indev "$ISO" -report_el_torito plain 2>&1 | grep -q UEFI || die "La ISO perdió el arranque UEFI"
+say "Listo"
+ls -la "$ISO"

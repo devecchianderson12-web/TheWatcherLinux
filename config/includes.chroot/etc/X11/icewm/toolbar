@@ -1,4 +1,0 @@
-prog "The Watcher" /usr/share/icons/hicolor/256x256/apps/thewatcher.png thewatcher
-prog "Navegador" firefox-esr firefox-esr
-prog "RustDesk" rustdesk rustdesk
-prog "Archivos" folder pcmanfm

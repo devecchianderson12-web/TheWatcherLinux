@@ -1,6 +1,0 @@
-#!/bin/sh
-# Idiomas ya generados: así el arranque Live no gasta tiempo en locale-gen
-set -e
-sed -i -e 's/^# *es_AR.UTF-8/es_AR.UTF-8/' -e 's/^# *es_ES.UTF-8/es_ES.UTF-8/' -e 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
-locale-gen
-update-locale LANG=es_AR.UTF-8

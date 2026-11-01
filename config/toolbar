@@ -1,0 +1,4 @@
+prog "The Watcher" /usr/share/icons/hicolor/256x256/apps/thewatcher.png thewatcher
+prog "Navegador" /usr/share/icons/Qogir/scalable/apps/web-browser.png desktop-defaults-run -b
+prog "RustDesk" /usr/share/icons/hicolor/256x256/apps/rustdesk.png rustdesk
+prog "Archivos" /usr/share/icons/Qogir/48/apps/file-manager.png desktop-defaults-run -fm

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Instalar paquete .deb
-Comment=Instala programas desde archivos .deb
-Exec=tw-deb %f
-Icon=package-x-generic
-Terminal=false
-Categories=System;
-MimeType=application/vnd.debian.binary-package;application/x-deb;

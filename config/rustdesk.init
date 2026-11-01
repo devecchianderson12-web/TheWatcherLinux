@@ -1,0 +1,15 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          rustdesk
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: RustDesk
+### END INIT INFO
+case "$1" in
+  start) start-stop-daemon --start --background --make-pidfile --pidfile /run/rustdesk.pid --exec /usr/share/rustdesk/rustdesk -- --service ;;
+  stop) start-stop-daemon --stop --pidfile /run/rustdesk.pid --retry 5; pkill -f 'rustdesk --' ;;
+  restart) "$0" stop; "$0" start ;;
+esac
+exit 0

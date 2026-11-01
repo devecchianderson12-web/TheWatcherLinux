@@ -1,157 +1,69 @@
 # TheWatcher Linux
 
-Distribución Linux ultraligera basada en **Debian 13 (trixie) de 64 bits**, con escritorio IceWM, NetworkManager, The Watcher (visor de cámaras RTSP/ONVIF), RustDesk, Firefox ESR, PCManFM e instalador gráfico de `.deb`.
+Sistema liviano de 64 bits basado en **antiX 26.1 Full** (Debian 13, sin systemd), con The Watcher y RustDesk instalados y sin el software que no hace falta. La ISO está en [Releases](../../releases).
 
-> **Estado:** versión 0.1.2, compilada y probada en máquina virtual. Instalador en disco, Wi-Fi y conexión real de RustDesk siguen sin probar: ver [docs/PRUEBAS.md](docs/PRUEBAS.md). La ISO está en [Releases](../../releases).
+## Qué trae
 
-## 1. Qué necesitás
-
-| | |
+| Función | Aplicación |
 |---|---|
-| Sistema para compilar | **Debian 13** (recomendado), Ubuntu 22.04 o posterior, **Windows 10/11 con WSL2**, o cualquier Linux con Docker |
-| Procesador | x86_64 |
-| RAM | 4 GB o más (mínimo 2 GB) |
-| Espacio libre | **20 GB** en un disco ext4 |
-| Internet | Sí, se descargan unos 2 GB |
-| Tiempo | De 20 minutos a varias horas, según el equipo y la conexión |
+| Cámaras | The Watcher 1.1.6 |
+| Acceso remoto | RustDesk 1.5.0 |
+| Navegador | Firefox ESR |
+| Archivos | zzzFM |
+| Instalador de `.deb` | deb-installer, de antiX |
+| Red | ConnMan con su icono (cmst) |
+| Escritorio | IceWM, con accesos en la barra |
+| Instalador en disco | Instalador gráfico de antiX |
 
-Equipo donde corre el sistema: procesador de **64 bits**, 2 GB de RAM como mínimo razonable (1 GB para escritorio y navegador con pocas pestañas), 8 GB de disco. **No funciona en procesadores de 32 bits**: RustDesk y The Watcher no tienen versión i386 para Linux ([docs/DECISIONES.md](docs/DECISIONES.md)).
+Se conservan los dos kernels de antiX: 5.10 para equipos antiguos y 6.6 para los más nuevos, seleccionables en el menú de arranque.
 
-## 2. Dependencias
+## Qué se quitó
 
-`build.sh` las comprueba y las instala solo con `apt`: `live-build`, `debootstrap`, `xorriso`, `squashfs-tools`, `mtools`, `dosfstools`, `curl`, `ca-certificates`, `unzip`, `binutils` y `dpkg-dev`.
+LibreOffice, GIMP, programas de correo, chat, torrents, multimedia y escáner, impresión, compiladores completos de C++, cabeceras del kernel, firmware de servidores y otros escritorios. La lista exacta está en [config/purge.list](config/purge.list).
 
-```bash
-sudo apt install --no-install-recommends live-build debootstrap xorriso squashfs-tools mtools dosfstools curl ca-certificates unzip binutils dpkg-dev
-```
+## Uso
 
-## 3. Preparar y compilar
+- **Modo Live:** arranca solo con el usuario `demo`, contraseña `demo`. La contraseña de root es `root`.
+- **Instalar en disco:** menú de aplicaciones > Sistema > instalador de antiX.
+- **Wi-Fi:** icono de red junto al reloj.
 
-### En Debian o Ubuntu
+## Requisitos
 
-Cloná el repositorio **en un disco de Linux** y ejecutá:
+Procesador de 64 bits. No funciona en 32 bits porque RustDesk y The Watcher solo existen para 64 bits.
 
-```bash
-sudo bash build.sh
-```
+## Compilar
 
-En Ubuntu y otros sistemas con `apt`, `build.sh` crea primero un Debian 13 mínimo dentro de `work/buildroot` y compila ahí.
-
-### En Windows
-
-1. En una PowerShell **de administrador**, una sola vez:
-
-   ```powershell
-   wsl --install -d Debian
-   ```
-
-2. Reiniciá si lo pide y abrí Debian una vez para crear tu usuario.
-3. Descargá el repositorio y hacé doble clic en `build.bat`.
-
-El script copia el proyecto al disco de Linux de WSL, porque un chroot no funciona sobre `C:`, y al terminar deja la ISO en la carpeta `out` de Windows.
-
-### Con Docker
+Necesita Debian 13 o WSL2, 20 GB libres, Internet y la ISO original `antiX 26.1 Full` de 64 bits, que se comprueba por SHA-256.
 
 ```bash
-docker run --rm --privileged -v "$PWD":/src -w /src debian:trixie bash build.sh
+sudo bash build.sh "/ruta/Antix 26.1 Full.iso"
 ```
 
-### En GitHub, sin instalar nada
+La ISO queda en `out/`.
 
-El workflow `build-iso.yml` compila la ISO en los servidores de GitHub, en cerca de una hora, y publica solo la ISO en **Releases** con la versión siguiente.
+## Decisiones
 
-1. Activá el workflow: copiá `tools/build-iso.yml` a `.github/workflows/`.
-2. Abrí **Actions > Build ISO TheWatcher Linux > Run workflow**.
-3. Al terminar, descargá la ISO desde **Releases**.
+- **Base antiX:** reemplaza a la base anterior de Debian con live-build. Trae su propio soporte de hardware y herramientas probadas.
+- **RustDesk sin systemd:** antiX bloquea `libsystemd0`, y RustDesk la declara aunque sus binarios no la usan. Se reempaqueta sin esa dependencia y su servicio se agrega para runit y sysvinit. Otros sistemas de inicio del menú, como s6 o dinit, no lo arrancan solo.
+- **Wi-Fi Broadcom:** se conserva el módulo `wl` ya compilado para los dos kernels, sin dejar DKMS instalado.
+- **Red:** se mantiene ConnMan, el sistema de antiX, en lugar de NetworkManager.
+- **Actualizaciones:** las automáticas de antiX siguen como vienen.
 
-### Con Localci
+## Pruebas
 
-`build-iso.yml` también corre en Localci, pero en Windows compila con WSL2: hace falta instalar Debian en WSL una sola vez, como en la sección de Windows. Sin WSL el paso falla y muestra la instrucción. El resultado queda en `iso-out/`.
+Versión 0.1.3 en QEMU/KVM con 2 GB de RAM. **No se probó en hardware físico.**
 
-### Reconstruir
-
-Para empezar de cero, conservando las descargas de `cache/`:
-
-```bash
-sudo bash build.sh --clean
-```
-
-## 4. Qué hace el script
-
-1. Comprueba sistema, espacio y permisos. 2. Instala las herramientas faltantes. 3. Prepara el entorno. 4. Descarga RustDesk y comprueba el SHA-256 de RustDesk y The Watcher. 5. Prepara los paquetes. 6. Configura `live-build`. 7. Integra aplicaciones y escritorio. 8. Construye la ISO. 9. Verifica que la ISO contenga el sistema, UEFI, el instalador y los paquetes obligatorios. 10. Muestra dónde quedó, o el error y la línea donde falló.
-
-## 5. Dónde queda la ISO
-
-| Archivo | Contenido |
+| Prueba | Resultado |
 |---|---|
-| `out/thewatcher-linux-0.1.2-amd64.hybrid.iso` | La ISO |
-| `out/*.sha256` | Suma de comprobación |
-| `out/paquetes-instalados.txt` | Lista exacta de paquetes y versiones |
-| `out/build.log` | Registro completo |
+| Arranque BIOS hasta el escritorio | Correcto |
+| Menú de arranque UEFI | Correcto |
+| Ethernet y HTTPS | Correcto |
+| RustDesk abre con ID y contraseña, servicio activo con runit | Correcto |
+| The Watcher abre | Correcto, sin cámaras reales |
+| Wi-Fi | **No probado** |
+| Conexión real de RustDesk | **No probado** |
+| Instalador en disco | **No probado** |
+| Instalar un `.deb` | **No probado** |
+| USB, apagado y Firefox con páginas reales | **No probado** |
 
-## 6. Grabar en un pendrive
-
-Esto **borra todo el pendrive**.
-
-- **Windows:** [Rufus](https://rufus.ie) en modo **DD** o [balenaEtcher](https://etcher.balena.io).
-- **Linux:** buscá el dispositivo con `lsblk` y reemplazá `/dev/sdX`:
-
-```bash
-sudo dd if=out/thewatcher-linux-0.1.2-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress conv=fsync
-```
-
-## 7. Probar en una máquina virtual
-
-**VirtualBox:** nueva máquina Debian 64 bits, 2 GB de RAM, 2 CPU, 16 MB o más de video, disco de 16 GB, y la ISO como unidad óptica. Para probar UEFI: Sistema > Habilitar EFI.
-
-**QEMU:**
-
-```bash
-qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 -cdrom out/thewatcher-linux-0.1.2-amd64.hybrid.iso -vga virtio -nic user,model=virtio-net-pci
-```
-
-## 8. Usar el sistema
-
-- **Modo Live:** es la primera opción del menú de arranque. Entra solo como `usuario`; la contraseña es `live`.
-- **Instalar:** en el menú de arranque elegí **Start installer**.
-- **Wi-Fi:** icono de red junto al reloj. **Ethernet:** se conecta sola.
-- **Accesos:** The Watcher, navegador, RustDesk y archivos están en la barra; el resto en el menú.
-- **Instalar un `.deb`:** doble clic en el archivo, o Menú > Instalar paquete .deb.
-- **Apagar y reiniciar:** Menú > Salir (según el idioma, `Logout`), que ofrece apagar y reiniciar.
-- **Actualizar:** Menú > Sistema > Actualizar el sistema. Es manual: no hay tareas en segundo plano.
-- **Medir:** Menú > Sistema > Diagnóstico guarda `~/tw-diag.txt`.
-- **Sin inicio automático:** el sistema instalado entra sin contraseña. Para pedirla, ejecutá:
-
-```bash
-sudo mkdir -p /etc/tw && sudo touch /etc/tw/no-autologin
-```
-
-## 9. Solución de problemas
-
-| Problema | Solución |
-|---|---|
-| `Ejecutá el script como root` | Usá `sudo bash build.sh`. |
-| `No compiles en un disco de Windows` o `no sirve para un chroot` | Mové el proyecto a un disco ext4, o usá `build.bat`. |
-| `SHA-256 incorrecto` | Descarga dañada: borrá el archivo de `cache/` y repetí. Si persiste, ver [docs/ACTUALIZAR.md](docs/ACTUALIZAR.md). |
-| `Failed to fetch` o `404` de apt | Mirror caído o paquete actualizado: repetí, o cambiá `DEBIAN_MIRROR` en `versions.env`. |
-| `Falta el paquete obligatorio` | Buscá el primer error en `out/build.log`. |
-| `Hay montajes activos` | Reiniciá y repetí. |
-| WSL no encuentra Debian | Ejecutá `wsl --install -d Debian` y abrilo una vez. |
-| Arranca sin escritorio | Abrí tty2 con Ctrl+Alt+F2 y revisá `/var/log/lightdm/` y `/var/log/Xorg.0.log`. |
-| Pantalla negra en una GPU antigua | En el menú de arranque pulsá `e` o Tab y agregá `nomodeset`. |
-| No aparece el Wi-Fi | Falta firmware: revisá `sudo dmesg \| grep -i firmware` y agregá el paquete a `config/package-lists/sistema.list.chroot`. |
-
-## 10. Estructura
-
-| Carpeta | Contenido |
-|---|---|
-| `build.sh`, `build.ps1`, `build.bat` | Compilación |
-| `versions.env` | Versiones y SHA-256 fijados |
-| `config/package-lists/` | Paquetes de la distribución |
-| `config/hooks/live/` | Instalación de aplicaciones, servicios y limpieza |
-| `config/includes.chroot/` | Configuración del sistema y del escritorio |
-| `config/includes.chroot/usr/local/bin/` | Herramientas y diagnóstico (`tw-*`) |
-| `packages/` | The Watcher `1.1.6` |
-| `tools/build-iso.yml`, `ci-build.sh` | Compilación en GitHub Actions y Localci |
-| `tests/` | Prueba de arranque en QEMU: `tests/boot-test.py` |
-| `docs/` | Decisiones, versiones, actualización, pruebas y consumo |
+**Consumo en VM, medido antes de apagar Conky:** 349 MB de RAM usada con Conky encendido, 151 procesos. En esta versión Conky queda apagado.

@@ -1,9 +1,0 @@
-#!/bin/sh
-# Sesión gráfica
-export XDG_CURRENT_DESKTOP=IceWM
-export XDG_SESSION_TYPE=x11
-export GTK_OVERLAY_SCROLLING=0
-export NO_AT_BRIDGE=1
-systemctl --user import-environment DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP 2>/dev/null
-xset s off -dpms 2>/dev/null
-exec icewm-session

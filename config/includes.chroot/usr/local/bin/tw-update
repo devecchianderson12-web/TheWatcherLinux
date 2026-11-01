@@ -1,4 +1,0 @@
-#!/bin/sh
-# Las actualizaciones automáticas están apagadas para no gastar recursos en segundo plano: se lanzan desde el menú
-tw-polkit
-exec xterm -T "Actualizar el sistema" -e sh -c 'pkexec sh -c "apt-get update && apt-get -y full-upgrade && apt-get clean"; echo; echo "Pulsá Enter para cerrar"; read x'

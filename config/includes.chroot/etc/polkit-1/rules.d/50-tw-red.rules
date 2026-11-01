@@ -1,6 +1,0 @@
-// Conectarse al Wi-Fi sin contraseña de administrador ni llavero: la clave queda guardada en el sistema y reconecta solo
-polkit.addRule(function (action, subject) {
-  if (action.id.indexOf("org.freedesktop.NetworkManager.") === 0 && subject.local && subject.active) {
-    return polkit.Result.YES;
-  }
-});
