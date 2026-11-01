@@ -66,7 +66,8 @@ for k in "$W"/wl/*; do v="$(basename "$k")"; mkdir -p "$F/lib/modules/$v/updates
 # Sin esto, al iniciar sesión desktop-menu pide contraseña para limpiar los accesos de lo que se quitó
 chroot "$F" bash -c 'dpkg-divert --list | grep "by antix26-desktop-files" | while read -r _ _ f _ t _; do
   if [ ! -e "$t" ]; then [ -L "$f" ] && rm -f "$f"; dpkg-divert --package antix26-desktop-files --rename --remove "$f" >/dev/null; fi; done'
-find -L "$F/usr/share/applications" -maxdepth 1 -type l -delete
+# Dentro del chroot: los accesos son enlaces absolutos, y desde fuera parecerían rotos
+chroot "$F" find -L /usr/share/applications -maxdepth 1 -type l -delete
 
 say "Idioma"
 sed -i -E 's/^([a-zA-Z])/# \1/; s/^# *(es_AR.UTF-8 UTF-8|es_ES.UTF-8 UTF-8|en_US.UTF-8 UTF-8)/\1/' "$F/etc/locale.gen"
@@ -104,6 +105,7 @@ if [ -n "${TW_TEST:-}" ]; then     # consola de root por el puerto serie: solo p
   ln -sf /etc/sv/ttest "$F/etc/runit/runsvdir/default/ttest"
 fi
 chroot "$F" dpkg-query -W > "$OUT/paquetes-instalados.txt"
+rm -rf "$W/desktop.ok"; mkdir -p "$W/desktop.ok"; cp -P "$F"/usr/share/applications/*.desktop "$W/desktop.ok/"
 chroot "$F" bash -c 'apt-get clean; rm -rf /var/lib/apt/lists/* /root/.bash_history; dpkg --audit'
 rm -f "$F/usr/sbin/policy-rc.d" "$F/etc/resolv.conf"
 cp "$W/resolv.orig" "$F/etc/resolv.conf"
@@ -118,6 +120,7 @@ xorriso -indev "$SRC" -outdev "$ISO" -boot_image any replay -volid antiX-Live -c
   -update "$W/iso/antiX/linuxfs" /antiX/linuxfs -update "$W/iso/antiX/linuxfs.md5" /antiX/linuxfs.md5 \
   -update "$W/iso/antiX/linuxfs.info" /antiX/linuxfs.info -update "$W/iso/boot/grub/grub.cfg" /boot/grub/grub.cfg \
   -update_r "$W/iso/boot/syslinux" /boot/syslinux -commit 2>&1 | tail -1
+for d in terminal minstall web-browser file-manager deb-installer; do [ -L "$W/desktop.ok/$d.desktop" ] || die "Falta el acceso $d.desktop"; done
 for p in rustdesk thewatcher firefox-esr connman antix-installer; do grep -q "^$p[[:space:]:]" "$OUT/paquetes-instalados.txt" || die "Falta $p"; done
 xorriso -indev "$ISO" -report_el_torito plain 2>&1 | grep -q UEFI || die "La ISO perdió el arranque UEFI"
 say "Listo"

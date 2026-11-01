@@ -51,7 +51,7 @@ La ISO queda en `out/`.
 
 ## Pruebas
 
-Versión 0.1.3 en QEMU/KVM con 2 GB de RAM. **No se probó en hardware físico.**
+Versión 0.1.4 en QEMU/KVM con 2 GB de RAM. **No se probó en hardware físico.**
 
 | Prueba | Resultado |
 |---|---|
@@ -63,6 +63,7 @@ Versión 0.1.3 en QEMU/KVM con 2 GB de RAM. **No se probó en hardware físico.*
 | Wi-Fi | **No probado** |
 | Conexión real de RustDesk | **No probado** |
 | Instalador en disco | **No probado** |
+| Terminal, zzzFM, Firefox, instalador y deb-installer abren | Correcto |
 | Instalar un `.deb` | **No probado** |
 | USB, apagado y Firefox con páginas reales | **No probado** |
 
