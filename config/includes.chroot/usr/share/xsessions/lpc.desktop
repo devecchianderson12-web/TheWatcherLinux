@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=LauncherPC Linux
+Exec=/usr/local/bin/lpc-session

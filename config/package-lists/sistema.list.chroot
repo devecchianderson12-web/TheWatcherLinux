@@ -35,7 +35,6 @@ amd64-microcode
 firmware-linux-free
 firmware-misc-nonfree
 firmware-iwlwifi
-firmware-ipw2x00
 firmware-realtek
 firmware-atheros
 firmware-ath9k-htc
@@ -49,7 +48,7 @@ firmware-bnx2
 firmware-amd-graphics
 firmware-intel-graphics
 
-# Sonido: PipeWire arranca por socket, sin consumo hasta que algo reproduce
+# Sonido
 pipewire-audio
 alsa-utils
 pavucontrol

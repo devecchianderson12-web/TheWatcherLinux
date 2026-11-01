@@ -25,9 +25,9 @@ Con 32 bits habría que renunciar a RustDesk actual y a LauncherPC, así que no 
 
 La diferencia de RAM entre systemd y sysvinit es pequeña frente a la estabilidad de usar lo que RustDesk espera.
 
-## Escritorio: IceWM, sin gestor de pantalla
+## Escritorio: IceWM con LightDM
 
-IceWM reúne ventanas, barra, menú, bandeja, reloj y apagado en un único programa. Openbox necesitaría además panel y menú, y LXDE suma más procesos. El menú se genera solo con `icewm-menu-fdo`. Se entra con `agetty --autologin` + `startx`, sin LightDM.
+IceWM reúne ventanas, barra, menú, bandeja, reloj y apagado en un único programa. Openbox necesitaría además panel y menú, y LXDE suma más procesos. El menú se genera solo con `icewm-menu-fdo`. Se entra con LightDM y sesión automática. Primero se usó `startx`, más liviano, pero logind veía una sesión tty y RustDesk rechazaba el escritorio con "Unsupported display server tty".
 
 ## Red: NetworkManager + nm-applet
 
@@ -69,7 +69,6 @@ Se ajusta en `/etc/firefox-esr/lpc.js`: 2 procesos de contenido, descarga de pes
 | `apt-daily`, `man-db`, `e2scrub` y `wait-online` apagados | Sin tareas de fondo y arranque más rápido. **Costo:** las actualizaciones son manuales |
 | journald en RAM, tope de 16 MB | Menos escritura |
 | 2 consolas virtuales | Menos procesos |
-| PipeWire por socket | Sin consumo hasta que algo reproduce |
 | Agente de contraseñas bajo demanda | Sin residente |
 | LauncherPC no arranca solo | Electron gasta unos cientos de MB; se activa en Ajustes si se quiere |
 | Con menos de 3 GB, fondo animado apagado de inicio | Menos GPU y RAM en el primer arranque |

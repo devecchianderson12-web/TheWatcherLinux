@@ -2,7 +2,7 @@
 
 Distribución Linux ultraligera basada en **Debian 13 (trixie) de 64 bits**, con escritorio IceWM, NetworkManager, RustDesk, Firefox ESR, PCManFM, instalador gráfico de `.deb` y LauncherPC adaptado a Linux.
 
-> **Estado:** este paquete trae todo para construir la ISO, pero **la ISO todavía no se compiló ni se arrancó**: el equipo donde se preparó no tiene WSL, Docker ni QEMU. Lo que sí se verificó y lo que falta está en [docs/PRUEBAS.md](docs/PRUEBAS.md).
+> **Estado:** versión 0.1.0, compilada y probada en máquina virtual. Instalador en disco, Wi-Fi y conexión real de RustDesk siguen sin probar: ver [docs/PRUEBAS.md](docs/PRUEBAS.md). La ISO está en [Releases](../../releases).
 
 ## 1. Qué necesitás
 
@@ -32,11 +32,11 @@ sudo apt install --no-install-recommends live-build debootstrap xorriso squashfs
 Extraé el ZIP **en un disco de Linux** y ejecutá:
 
 ```bash
-unzip LauncherPC-Linux-1.0.zip
+unzip LauncherPC-Linux-0.1.0.zip
 ```
 
 ```bash
-cd LauncherPC-Linux-1.0 && sudo bash build.sh
+cd LauncherPC-Linux-0.1.0 && sudo bash build.sh
 ```
 
 En Ubuntu y otros sistemas con `apt`, `build.sh` crea primero un Debian 13 mínimo dentro de `work/buildroot` y compila ahí.
@@ -62,11 +62,11 @@ docker run --rm --privileged -v "$PWD":/src -w /src debian:trixie bash build.sh
 
 ### En GitHub, sin instalar nada
 
-El workflow `build-iso.yml` compila la ISO en los servidores de GitHub, en cerca de una hora.
+El workflow `build-iso.yml` compila la ISO en los servidores de GitHub, en cerca de una hora, y la publica en **Releases** con la versión siguiente: 0.1.0, 0.1.1, 0.1.2...
 
 1. En este repositorio ya está. Con el ZIP, subí su contenido extraído a un repositorio propio, incluida la carpeta oculta `.github`.
 2. Abrí **Actions > Build ISO LauncherPC Linux > Run workflow**.
-3. Al terminar, descargá el artefacto **lpc-linux-iso**. Trae la ISO, el `.deb` de LauncherPC, la lista de paquetes y el registro, y se guarda 30 días.
+3. Al terminar, descargá la ISO desde **Releases**.
 
 ### Con Localci
 
@@ -88,7 +88,7 @@ sudo bash build.sh --clean
 
 | Archivo | Contenido |
 |---|---|
-| `out/lpc-linux-1.0-amd64.hybrid.iso` | La ISO |
+| `out/lpc-linux-0.1.0-amd64.hybrid.iso` | La ISO |
 | `out/*.sha256` | Suma de comprobación |
 | `out/paquetes-instalados.txt` | Lista exacta de paquetes y versiones |
 | `out/ps-launcher_*_amd64.deb` | LauncherPC para Linux |
@@ -102,7 +102,7 @@ Esto **borra todo el pendrive**.
 - **Linux:** buscá el dispositivo con `lsblk` y reemplazá `/dev/sdX`:
 
 ```bash
-sudo dd if=out/lpc-linux-1.0-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=out/lpc-linux-0.1.0-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
 ## 7. Probar en una máquina virtual
@@ -112,7 +112,7 @@ sudo dd if=out/lpc-linux-1.0-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress 
 **QEMU:**
 
 ```bash
-qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 -cdrom out/lpc-linux-1.0-amd64.hybrid.iso -vga virtio -nic user,model=virtio-net-pci
+qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 -cdrom out/lpc-linux-0.1.0-amd64.hybrid.iso -vga virtio -nic user,model=virtio-net-pci
 ```
 
 ## 8. Usar el sistema
@@ -142,7 +142,7 @@ sudo mkdir -p /etc/lpc && sudo touch /etc/lpc/no-autologin
 | `Falta el paquete obligatorio` | Buscá el primer error en `out/build.log`. |
 | `Hay montajes activos` | Reiniciá y repetí. |
 | WSL no encuentra Debian | Ejecutá `wsl --install -d Debian` y abrilo una vez. |
-| Arranca sin escritorio | Abrí tty2 con Ctrl+Alt+F2 y revisá `~/.local/share/xorg/Xorg.0.log`. |
+| Arranca sin escritorio | Abrí tty2 con Ctrl+Alt+F2 y revisá `/var/log/lightdm/` y `/var/log/Xorg.0.log`. |
 | Pantalla negra en una GPU antigua | En el menú de arranque pulsá `e` o Tab y agregá `nomodeset`. |
 | No aparece el Wi-Fi | Falta firmware: revisá `sudo dmesg \| grep -i firmware` y agregá el paquete a `config/package-lists/sistema.list.chroot`. |
 | LauncherPC va lento | Ajustes > Fondo animado: No, o Ajustes > Gráficos > Optimizar. |

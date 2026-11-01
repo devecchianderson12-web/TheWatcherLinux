@@ -15,6 +15,7 @@ Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y Electron, D
 | Red | NetworkManager | 1.52.1-1 | Debian |
 | Icono de red | network-manager-applet | 1.36.0-3+b1 | Debian |
 | Escritorio | IceWM | 3.7.4-1 | Debian |
+| Inicio de sesión | LightDM | Ver `paquetes-instalados.txt` | Debian |
 
 ## Sistema
 
@@ -48,4 +49,4 @@ Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y Electron, D
 
 ## Tamaño estimado
 
-Una resolución de dependencias contra los índices de Debian dio **unos 670 paquetes y 1,9 GB instalados**, sin paquetes sin resolver. Con LauncherPC y RustDesk son unos 2,2 GB. Es un cálculo aproximado: la ISO real probablemente mida entre 1 y 1,5 GB.
+La ISO 0.1.0 mide **1312 MB**.

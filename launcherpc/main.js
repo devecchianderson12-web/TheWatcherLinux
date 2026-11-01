@@ -742,7 +742,7 @@ function stopStats() { clearInterval(statsTimer); statsTimer = null; }
 function createWin() {
   win = new BrowserWindow({
     show: false, fullscreen: true, frame: false, backgroundColor: '#0a2a86',
-    skipTaskbar: true, autoHideMenuBar: true,
+    skipTaskbar: true, autoHideMenuBar: true, ...(LINUX ? { icon: path.join(__dirname, 'assets', 'icon.png') } : {}),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false, contextIsolation: true }
   });
   win.loadFile('index.html');
@@ -786,6 +786,7 @@ function showLauncher() {
   clearTimeout(hideT); hideT = null;
   if (paused) { resumeLauncher(true); holdFront(); return; }     // ya estaba visible detrás de otro programa: solo estaba congelado
   win.show(); toFront(); holdFront();
+  if (LINUX) win.setFullScreen(true);              // en X11 el fullscreen pedido con la ventana oculta se pierde y la barra queda encima
   win.webContents.send('enter');
   startStats();
   syncTaskbar();

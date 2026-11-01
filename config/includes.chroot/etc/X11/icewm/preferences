@@ -26,3 +26,4 @@ ShutdownCommand="systemctl poweroff"
 RebootCommand="systemctl reboot"
 TimeFormat="%H:%M"
 WorkspaceNames=" 1 "
+TaskBarFullscreenAutoShow=0

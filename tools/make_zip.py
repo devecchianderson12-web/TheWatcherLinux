@@ -6,7 +6,7 @@ import zipfile
 
 DISTRO = pathlib.Path(__file__).resolve().parents[1]
 REPO = DISTRO.parent
-VERSION = re.search(r'DISTRO_VERSION="([^"]+)"', (DISTRO / "versions.env").read_text(encoding="utf-8")).group(1)
+VERSION = re.search(r':-(\d+\.\d+\.\d+)}', (DISTRO / "versions.env").read_text(encoding="utf-8")).group(1)
 TOP = f"LauncherPC-Linux-{VERSION}"
 OUT = REPO / f"{TOP}.zip"
 SKIP = {"work", "cache", "out", "__pycache__"}

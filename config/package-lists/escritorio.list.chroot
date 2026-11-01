@@ -1,15 +1,17 @@
-# Servidor gráfico. legacy: los drivers vesa y fbdev de equipos antiguos necesitan root
+# Servidor gráfico
 xserver-xorg-core
-xserver-xorg-legacy
 xserver-xorg-input-all
 xserver-xorg-video-all
-xinit
 xauth
 x11-xserver-utils
 x11-utils
 libgl1-mesa-dri
 libegl1
 libgles2
+
+# LightDM: RustDesk exige que logind vea una sesión x11, y con startx la ve como tty y no acepta conexiones
+lightdm
+lightdm-gtk-greeter
 
 # Escritorio: IceWM trae en un solo proceso barra, menú, ventanas y apagado
 icewm

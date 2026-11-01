@@ -6,6 +6,7 @@ for u in apt-daily.timer apt-daily-upgrade.timer man-db.timer e2scrub_all.timer 
   systemctl disable "$u" 2>/dev/null || true
 done
 systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
-systemctl enable NetworkManager.service systemd-timesyncd.service
+systemctl enable NetworkManager.service systemd-timesyncd.service lightdm.service
+systemctl set-default graphical.target
 # Xorg y GTK no necesitan esto en una sola sesión gráfica
 rm -f /etc/xdg/autostart/at-spi-dbus-bus.desktop

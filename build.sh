@@ -104,9 +104,12 @@ launcher_src() {
 configure_lb() {
   say "Configurando la distribución"
   local lb="$WORK/lb"
-  [ -d "$lb/config" ] && (cd "$lb" && lb clean --purge >/dev/null 2>&1 || true)
+  # Los paquetes ya descargados se conservan entre compilaciones
+  [ ! -d "$lb/cache" ] || { rm -rf "$WORK/lb-cache"; mv "$lb/cache" "$WORK/lb-cache"; }
+  [ -d "$lb/config" ] && (cd "$lb" && lb clean --all >/dev/null 2>&1 || true)
   rm -rf "$lb"
   mkdir -p "$lb"
+  [ ! -d "$WORK/lb-cache" ] || mv "$WORK/lb-cache" "$lb/cache"
   cd "$lb"
   lb config noauto \
     --mode debian --system live --distribution "$DEBIAN_SUITE" --architecture amd64 \
@@ -116,7 +119,7 @@ configure_lb() {
     --security true --updates true --backports false \
     --apt-recommends false --apt-indices false --cache-packages true \
     --firmware-chroot false --firmware-binary false \
-    --linux-flavours amd64 --memtest none --win32-loader false --zsync false --source false --checksums sha256 \
+    --linux-flavours amd64 --memtest none --loadlin false --win32-loader false --zsync false --source false --checksums sha256 \
     --debian-installer live --debian-installer-gui true --debian-installer-distribution "$DEBIAN_SUITE" \
     --chroot-squashfs-compression-type xz \
     --image-name "$DISTRO_ID-$DISTRO_VERSION" \
@@ -124,7 +127,9 @@ configure_lb() {
     --bootappend-live "boot=live components quiet username=usuario hostname=lpc-linux locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires"
   cp -a "$ROOT/config/." "$lb/config/"
   mkdir -p "$lb/config/packages.chroot"
-  cp "$CACHE/$(basename "$RUSTDESK_URL")" "$WORK"/launcher/ps-launcher_*_amd64.deb "$lb/config/packages.chroot/"
+  # live-build solo toma archivos con el nombre *_amd64.deb
+  cp "$CACHE/$(basename "$RUSTDESK_URL")" "$lb/config/packages.chroot/rustdesk_${RUSTDESK_VERSION}_amd64.deb"
+  cp "$WORK"/launcher/ps-launcher_*_amd64.deb "$lb/config/packages.chroot/"
   find "$lb/config" -type f -path '*hooks*' -exec chmod 755 {} +
   find "$lb/config/includes.chroot/usr/local" -type f -exec chmod 755 {} +
   chmod 755 "$lb/config/includes.chroot/etc/X11/icewm/startup"

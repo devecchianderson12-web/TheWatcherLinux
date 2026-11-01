@@ -17,13 +17,14 @@ report() {
   has pcmanfm "PCManFM"
   has gdebi-gtk "gdebi"
   has nm-applet "Icono de red"
+  [ "$(loginctl show-session "$(loginctl list-sessions --no-legend | awk '$3 == "'"$USER"'" {print $1; exit}')" -p Type --value 2>/dev/null)" = x11 ] && ok "Sesión x11 para RustDesk" || bad "Sesión x11 para RustDesk"
   stat -c '%a' /opt/ps-launcher/chrome-sandbox 2>/dev/null | grep -q 4755 && ok "Sandbox de LauncherPC" || bad "Sandbox de LauncherPC"
   echo
   echo "--- Servicios ---"
-  for s in NetworkManager rustdesk systemd-timesyncd; do
+  for s in NetworkManager rustdesk systemd-timesyncd lightdm; do
     systemctl is-active --quiet "$s" && ok "$s activo" || bad "$s inactivo"
   done
-  swapon --noheadings --show=NAME 2>/dev/null | grep -q zram && ok "zram activo" || bad "zram inactivo"
+  grep -q zram /proc/swaps && ok "zram activo" || bad "zram inactivo"
   echo
   echo "--- Red ---"
   nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null | sed 's/^/  /'

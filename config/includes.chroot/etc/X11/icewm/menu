@@ -1,7 +1,7 @@
-prog "LauncherPC" ps-launcher ps-launcher
+prog "LauncherPC" /usr/share/icons/hicolor/256x256/apps/ps-launcher.png ps-launcher
 prog "Navegador" firefox-esr firefox-esr
 prog "RustDesk" rustdesk rustdesk
-prog "Archivos" system-file-manager pcmanfm
+prog "Archivos" folder pcmanfm
 prog "Instalar paquete .deb" package-x-generic lpc-deb
 separator
 menuprog "Aplicaciones" folder icewm-menu-fdo

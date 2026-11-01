@@ -1,0 +1,51 @@
+name: Build ISO LauncherPC Linux
+# Compila la ISO y la publica como release con la versión siguiente (0.1.0, 0.1.1, 0.1.2...).
+# Es manual porque tarda cerca de una hora: Actions > Build ISO LauncherPC Linux > Run workflow.
+# En Localci y SpringCompiler solo compila: la release se omite y la ISO queda en iso-out/.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  iso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Calcular versión
+        id: ver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
+          case "$last" in
+            *.*.*) v="${last%.*}.$((${last##*.} + 1))" ;;
+            *) v=0.1.0 ;;
+          esac
+          echo "Versión: $v"
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "v=$v" >> "$GITHUB_OUTPUT"; fi
+      - name: Compilar la ISO
+        shell: bash
+        env:
+          SGDB_KEY: ${{ secrets.SGDB_KEY }}
+          DISTRO_VERSION: ${{ steps.ver.outputs.v }}
+        run: |
+          if [ -f distro/ci-build.sh ]; then bash distro/ci-build.sh; else bash ci-build.sh; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lpc-linux-iso
+          path: iso-out/
+          retention-days: 7
+          compression-level: 0
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.v }}
+          name: LauncherPC Linux ${{ steps.ver.outputs.v }}
+          generate_release_notes: true
+          files: |
+            iso-out/*.iso
+            iso-out/*.sha256
+            iso-out/*.deb
+            iso-out/paquetes-instalados.txt

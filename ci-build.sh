@@ -21,7 +21,7 @@ case "$(uname -s)" in
       sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       sudo docker image prune -af >/dev/null
       df -h /
-      sudo docker run --rm --privileged -e SGDB_KEY="${SGDB_KEY:-}" -v "$TOP":/repo -w "/repo/$SUB" debian:trixie bash build.sh
+      sudo docker run --rm --privileged -e SGDB_KEY="${SGDB_KEY:-}" -e DISTRO_VERSION="${DISTRO_VERSION:-}" -v "$TOP":/repo -w "/repo/$SUB" debian:trixie bash build.sh
       st=$?
     elif [ "$(id -u)" -eq 0 ]; then
       bash "$HERE/build.sh"; st=$?

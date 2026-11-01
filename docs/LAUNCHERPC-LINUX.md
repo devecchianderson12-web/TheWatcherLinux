@@ -16,7 +16,7 @@ La adaptación se hizo en el mismo código: Windows sigue usando sus caminos y L
 | Pausa con otro programa delante | Igual, con el ayudante de arriba | Conservado |
 | Combinación L1+R1+L2+R2 (XInput/winmm) | Lectura de `/dev/input/js*`, con detección de mandos por inotify | Adaptado |
 | Atajo Ctrl+Alt+P | `globalShortcut` en X11 | Conservado |
-| Ocultar barra de tareas | No hace falta: la pantalla completa la tapa. La opción se oculta | Sustituido |
+| Ocultar barra de tareas | La opción se oculta. **Falla conocida en 0.1.0:** la barra de IceWM queda sobre el launcher | Pendiente |
 | Forzar primer plano (`AttachThreadInput`) | `win.focus()`, IceWM no lo bloquea | Sustituido |
 | Iniciar con Windows | `~/.config/autostart/ps-launcher.desktop` | Adaptado |
 | CPU y RAM | Sin cambios | Conservado |
@@ -38,7 +38,7 @@ Para que Linux detecte una versión nueva, la release de GitHub tiene que inclui
 
 ## Datos del usuario
 
-`~/.config/ps-launcher/`: `config.json`, `library.json`, `covers/`, `bgvideo/`.
+`~/.config/PS Launcher/`: `config.json`, `library.json`, `covers/`, `bgvideo/`.
 
 ## Clave de SteamGridDB
 

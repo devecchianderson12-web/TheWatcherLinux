@@ -1,26 +1,40 @@
 # Consumo de RAM y CPU en reposo
 
-**Sin medir.** La ISO no se compiló ni se arrancó, así que no hay cifras reales y este informe no inventa ninguna.
+Medido el 01/11/2026 en QEMU/KVM con 2 GB de RAM y 2 CPU, en modo Live, con `lpc-diag`. **Es una máquina virtual: en hardware real las cifras pueden variar.**
 
-## Cómo obtenerlo
+| Medición | Resultado |
+|---|---|
+| RAM usada en reposo | **371 MB** de 1973 MB (`free`, columna usado) |
+| RAM disponible | 1602 MB |
+| CPU en reposo, promedio de 30 s | **1 %** |
+| Procesos | 118 |
+| Arranque hasta el modo gráfico | **9,7 s** (kernel 3,2 s + sistema 6,4 s) |
+| RAM usada con Firefox y una página | 911 MB |
+| RAM usada con LauncherPC abierto | 666 MB |
 
-1. Arrancá el sistema, conectate a la red y dejalo 2 minutos sin tocar.
-2. Menú > Sistema > **Diagnóstico**.
-3. El resultado queda en `~/lpc-diag.txt`: CPU promedio de 30 s, `free -m`, cantidad de procesos, los 12 que más RAM usan y el tiempo de arranque.
+En modo Live parte de los archivos ocupa memoria caché. No está incluido en el valor "usado".
 
-## Tabla a completar
+## Procesos que más memoria usan
 
-| Medición | VM 2 GB | Equipo real |
-|---|---|---|
-| RAM usada en reposo | | |
-| CPU en reposo | | |
-| Procesos | | |
-| Tiempo de arranque | | |
-| RAM con Firefox y una página | | |
-| RAM con LauncherPC abierto | | |
+Valores RSS, que cuentan dos veces la memoria compartida.
 
-## Qué queda residente
+| Proceso | MB |
+|---|---|
+| Xorg | 98,5 |
+| nm-applet | 92,9 |
+| RustDesk (3 procesos) | 64,3 + 53,3 + 37,0 |
+| NetworkManager | 19,4 |
+| wireplumber | 16,0 |
+| udisksd | 13,8 |
+| icewm | 12,4 |
+| pipewire | 11,1 |
 
-Kernel, systemd, udev, dbus, logind, journald, NetworkManager, wpa_supplicant, timesyncd, polkit, RustDesk, udisks si fue activado, Xorg, IceWM (con `icewmbg` e `icewm-session`) y nm-applet.
+RustDesk es lo que más consume, y es necesario para recibir conexiones. Para ahorrar esa memoria en un equipo que no las necesite:
 
-Los más pesados en reposo deberían ser Xorg y RustDesk. Si hace falta bajar más, se puede apagar RustDesk con `sudo systemctl disable --now rustdesk`, a costa de no recibir conexiones.
+```bash
+sudo systemctl disable --now rustdesk
+```
+
+## Repetir la medición
+
+Menú > Sistema > **Diagnóstico**. El resultado queda en `~/lpc-diag.txt`.

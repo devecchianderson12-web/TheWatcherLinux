@@ -8,7 +8,7 @@ Se distribuye como **un único .exe portable** (sin instalador). El usuario habl
 - `index.html`: toda la interfaz (CSS + JS en un solo archivo, sin framework).
 - `preload.js`: puente `window.api` (contextIsolation). Cada IPC nuevo se añade aquí y en `main.js`.
 - `linux.js`: equivalentes en Linux (Steam, Heroic, .desktop, programas, `xprop`, mando por `/dev/input/js*`, GPU por sysfs). Módulo puro con pruebas en `distro/tests/linux.test.js`. En `main.js` se entra con `LINUX` / `lx`; Windows no lo carga.
-- `distro/`: distribución LauncherPC Linux (Debian 13, live-build). `build.sh` construye la ISO; `python distro/tools/make_zip.py` genera el ZIP. Estado de las pruebas en `distro/docs/PRUEBAS.md`: la ISO todavía no se compiló.
+- `distro/`: distribución LauncherPC Linux (Debian 13, live-build). `build.sh` construye la ISO; `python distro/tools/make_zip.py` genera el ZIP. Repositorio público: `devecchianderson12-web/Linux` (ISO en Releases, 0.1.x). Estado de las pruebas en `distro/docs/PRUEBAS.md`.
 - `lhm.js`: lectura de LibreHardwareMonitor. `package.json`: versión, `updateRepo`, config de electron-builder. `.github/workflows/build.yml`: compila y publica la release.
 
 ## Diseños (se cambian con L / botón del mando / Ajustes)
