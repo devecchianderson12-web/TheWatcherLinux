@@ -1,7 +1,7 @@
 #!/bin/sh
 # Instalador gráfico de .deb. gdebi muestra nombre, versión y descripción, resuelve dependencias con apt y avisa de los errores.
 # La ISO no trae los índices de apt (ahorran espacio): sin ellos gdebi no podría resolver dependencias.
-lpc-polkit
+tw-polkit
 file=$1
 if [ -z "$file" ]; then
   file=$(zenity --file-selection --title="Elegir un paquete .deb" --file-filter="Paquetes .deb | *.deb") || exit 0

@@ -1,9 +1,9 @@
 #!/bin/sh
 # Inicio de sesión automático del primer usuario. Vale para el Live y para el sistema instalado, donde el nombre lo elige
-# el instalador. Se desactiva creando /etc/lpc/no-autologin.
-f=/etc/lightdm/lightdm.conf.d/60-lpc-autologin.conf
+# el instalador. Se desactiva creando /etc/tw/no-autologin.
+f=/etc/lightdm/lightdm.conf.d/60-tw-autologin.conf
 user=$(awk -F: '$3 >= 1000 && $3 < 60000 && $7 !~ /(nologin|false)$/ { print $1; exit }' /etc/passwd)
-if [ -n "$user" ] && [ ! -e /etc/lpc/no-autologin ]; then
+if [ -n "$user" ] && [ ! -e /etc/tw/no-autologin ]; then
   printf '[Seat:*]\nautologin-user=%s\nautologin-user-timeout=0\n' "$user" > "$f"
 else
   rm -f "$f"

@@ -1,5 +1,0 @@
-#!/bin/sh
-# Steam es de 32 bits y ocupa más de 1 GB con sus bibliotecas i386: no va en la ISO, se instala desde aquí
-zenity --question --title="Instalar Steam" --text="Se habilitan los paquetes de 32 bits y se descarga Steam (más de 1 GB).\n¿Continuar?" || exit 0
-lpc-polkit
-exec xterm -T "Instalar Steam" -e sh -c 'pkexec sh -c "dpkg --add-architecture i386 && apt-get update && apt-get -y install steam-installer"; echo; echo "Pulsá Enter para cerrar"; read x'

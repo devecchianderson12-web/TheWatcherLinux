@@ -1,6 +1,0 @@
-#!/bin/sh
-# Con menos de 3 GB de RAM el primer arranque deja el fondo animado apagado (se puede activar en Ajustes)
-mem=$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)
-lite=
-[ "$mem" -lt 3072 ] && lite=--lite
-exec /opt/ps-launcher/ps-launcher $lite --ozone-platform=x11 "$@"

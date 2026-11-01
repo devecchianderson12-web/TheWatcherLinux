@@ -18,18 +18,16 @@ sudo bash build.sh --clean
 
 Para agregar o quitar paquetes: editá `config/package-lists/*.list.chroot`.
 
-### RustDesk o Electron
+### RustDesk
 
 1. Buscá la versión en sus releases de GitHub.
-2. Calculá el SHA-256 del archivo. La API de GitHub lo publica en `assets[].digest` para RustDesk; Electron lo publica en `SHASUMS256.txt`.
+2. La API de GitHub publica el SHA-256 en `assets[].digest`.
 3. Cambiá versión y SHA-256 en `versions.env`.
 4. Recompilá.
 
-Si Electron cambia de versión mayor, comprobá las bibliotecas que necesita y actualizá `launcher/control.in`.
+### The Watcher
 
-### LauncherPC
-
-Reemplazá los archivos de `launcherpc/` y recompilá. La versión del paquete sale de `package.json`.
+Reemplazá el `.deb` de `packages/` y actualizá nombre y SHA-256 en `versions.env`.
 
 ## Reconstruir la ISO
 
@@ -41,4 +39,4 @@ Reconfigura y reconstruye `work/lb`. Las descargas de `cache/` se reutilizan si 
 
 ## Pasar a Debian 14
 
-Cambiá `DEBIAN_SUITE` y revisá nombres de paquetes (`libavcodec61`, los `t64` de `launcher/control.in`) y opciones de `live-build`. Si necesitás una imagen reproducible al detalle, apuntá `DEBIAN_MIRROR` a una fecha de `snapshot.debian.org`.
+Cambiá `DEBIAN_SUITE` y revisá nombres de paquetes (`libavcodec61`) y opciones de `live-build`. Si necesitás una imagen reproducible al detalle, apuntá `DEBIAN_MIRROR` a una fecha de `snapshot.debian.org`.

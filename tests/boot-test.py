@@ -18,7 +18,7 @@ for s in (ser, mon):
     if os.path.exists(s):
         os.remove(s)
 cmd = ["qemu-system-x86_64", "-enable-kvm", "-cpu", "host", "-m", ram, "-smp", "2", "-cdrom", iso, "-kernel", f"{out}/vmlinuz", "-initrd", f"{out}/initrd.img",
-       "-append", "boot=live components username=usuario hostname=lpc-linux locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires console=tty0 console=ttyS0,115200",
+       "-append", "boot=live components username=usuario hostname=thewatcher locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires console=tty0 console=ttyS0,115200",
        "-vga", "std", "-nic", "user,model=e1000", "-drive", f"if=none,id=usbd,format=raw,file={out}/usb.img", "-usb", "-device", "usb-storage,drive=usbd", "-display", "none", "-serial", f"unix:{ser},server,nowait", "-monitor", f"unix:{mon},server,nowait"]
 subprocess.run(f"truncate -s 64M {out}/usb.img && mkfs.vfat {out}/usb.img >/dev/null", shell=True, check=True)
 vm = subprocess.Popen(cmd)
@@ -81,17 +81,17 @@ try:
     run("stty cols 160; export DISPLAY=:0 XAUTHORITY=$(ls -d /run/lightdm/usuario/xauthority $HOME/.Xauthority 2>/dev/null | head -1)")
     run("systemd-analyze; systemctl --failed --no-pager; ps -eo rss,comm --sort=-rss | head -20; free -m; loginctl list-sessions --no-legend; loginctl show-session $(loginctl list-sessions --no-legend | awk '/usuario/ && !/tty|pts/ {print $1; exit}') -p Type -p Display; cat /proc/swaps")
     run("pgrep -a Xorg; pgrep -a icewm; pgrep -a nm-applet; nmcli -t device; curl -sS -m 10 -o /dev/null -w 'https %{http_code}\\n' https://deb.debian.org/")
-    run("systemctl is-active rustdesk NetworkManager systemd-timesyncd; dpkg-query -W rustdesk ps-launcher firefox-esr pcmanfm gdebi icewm; stat -c '%a %U' /opt/ps-launcher/chrome-sandbox")
-    run("lpc-diag | tail -40", 90)
+    run("systemctl is-active rustdesk NetworkManager systemd-timesyncd; dpkg-query -W rustdesk thewatcher firefox-esr pcmanfm gdebi icewm")
+    run("tw-diag | tail -40", 90)
     run("(rustdesk >/tmp/rd.log 2>&1 &) ; sleep 15; pgrep -a rustdesk | head -5")
     shot("2-rustdesk")
     run("pkill -f 'rustdesk$'; (pcmanfm >/tmp/fm.log 2>&1 &) ; sleep 6; pgrep -a pcmanfm; free -m | sed -n 2p")
     shot("3-archivos")
     run("pkill pcmanfm; (firefox-esr https://www.debian.org >/tmp/ff.log 2>&1 &) ; sleep 30; pgrep -c firefox; free -m | sed -n 2p")
     shot("4-firefox")
-    run("pkill firefox; sleep 2; (ps-launcher >/tmp/lp.log 2>&1 &) ; sleep 30; pgrep -c ps-launcher; free -m | sed -n 2p; pgrep -a xprop; tail -15 /tmp/lp.log; ls ~/.config/ps-launcher")
-    shot("5-launcher")
-    run("ls ~/.config; xprop -root _NET_ACTIVE_WINDOW; xwininfo -root -tree | grep -i 'launcher' | head -3; pkill ps-launcher; sleep 1")
+    run("pkill firefox; sleep 2; (thewatcher >/tmp/w.log 2>&1 &) ; sleep 15; pgrep -a TheWatcher | head -3; free -m | sed -n 2p; tail -8 /tmp/w.log")
+    shot("5-thewatcher")
+    run("pkill TheWatcher; sleep 1")
     run("lsblk -o NAME,SIZE,TRAN | grep usb; udisksctl mount -b /dev/sda --no-user-interaction; ls /media/usuario 2>&1; udisksctl unmount -b /dev/sda --no-user-interaction", 30)
     run("cd /tmp; sudo apt-get update 2>&1 | tail -1; apt-get download sl 2>&1 | tail -1; sudo gdebi -n /tmp/sl*.deb 2>&1 | tail -3; which sl; dpkg-query -W libncurses6 sl", 120)
     res.write("\nOK\n")

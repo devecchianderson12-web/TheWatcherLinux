@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=LauncherPC
-Comment=Biblioteca de juegos a pantalla completa
-Exec=ps-launcher
-Icon=ps-launcher
-Terminal=false
-Categories=Utility;
-StartupWMClass=ps-launcher

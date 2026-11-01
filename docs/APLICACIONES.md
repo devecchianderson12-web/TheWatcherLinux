@@ -1,14 +1,13 @@
 # Aplicaciones y versiones
 
-Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y Electron, Debian entrega la última actualización de seguridad en el momento de compilar. **La lista exacta de cada ISO queda en `out/paquetes-instalados.txt`.**
+Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y The Watcher, Debian entrega la última actualización de seguridad en el momento de compilar. **La lista exacta de cada ISO queda en `out/paquetes-instalados.txt`.**
 
 ## Obligatorias
 
 | Función | Aplicación | Versión | Origen |
 |---|---|---|---|
 | Acceso remoto | RustDesk | 1.5.0 | GitHub oficial, SHA-256 fijado |
-| Launcher | LauncherPC (PS Launcher) | 1.23.0 | Este proyecto |
-| Motor de LauncherPC | Electron | 45.2.1 | GitHub oficial, SHA-256 fijado |
+| Cámaras | The Watcher | 1.1.6 | Paquete propio, SHA-256 fijado |
 | Navegador | Firefox ESR | 153.6.0esr-1~deb13u1 | Debian |
 | Archivos | PCManFM | 1.4.0-1 | Debian |
 | Instalador `.deb` | gdebi | 0.9.5.8 | Debian |
@@ -47,6 +46,6 @@ Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y Electron, D
 | Zenity | 4.1.90-1 |
 | PulseAudio Volume Control | 6.1-1 |
 
-## Tamaño estimado
+## Tamaño
 
-La ISO 0.1.0 mide **1312 MB**.
+La ISO 0.1.1 mide **1301 MB**.

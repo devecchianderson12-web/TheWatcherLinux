@@ -24,11 +24,11 @@ $src = '/mnt/' + $drive + ($here.Substring(2) -replace '\\', '/')
 $script = @"
 set -e
 export DEBIAN_FRONTEND=noninteractive
-mkdir -p /root/lpc-build
+mkdir -p /root/tw-build
 cd '$src'
-tar --exclude=./work --exclude=./cache --exclude=./out -cf - . | tar -xf - -C /root/lpc-build
-[ ! -d '$src/cache' ] || cp -rn '$src/cache' /root/lpc-build/
-cd /root/lpc-build
+tar --exclude=./work --exclude=./cache --exclude=./out -cf - . | tar -xf - -C /root/tw-build
+[ ! -d '$src/cache' ] || cp -rn '$src/cache' /root/tw-build/
+cd /root/tw-build
 bash build.sh
 mkdir -p '$src/out' '$src/cache'
 cp -f out/*.iso out/*.sha256 out/*.txt out/build.log '$src/out/'
@@ -39,5 +39,5 @@ $tmp = Join-Path $here 'wsl-build.sh'
 [IO.File]::WriteAllText($tmp, $script, (New-Object Text.UTF8Encoding $false))
 try { & wsl.exe -d $distro -u root --exec bash "$src/wsl-build.sh" }
 finally { Remove-Item $tmp -ErrorAction SilentlyContinue }
-if ($LASTEXITCODE -ne 0) { throw "La compilación falló. Ver el registro dentro de WSL: /root/lpc-build/out/build.log" }
+if ($LASTEXITCODE -ne 0) { throw "La compilación falló. Ver el registro dentro de WSL: /root/tw-build/out/build.log" }
 Write-Host "`nISO lista en: $here\out" -ForegroundColor Green

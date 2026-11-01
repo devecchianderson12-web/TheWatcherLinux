@@ -1,9 +1,0 @@
-#!/bin/sh
-set -e
-# El sandbox de Chromium necesita root SUID; algunas herramientas de empaquetado pierden el bit
-if [ "$1" = configure ]; then
-  chown root:root /opt/ps-launcher/chrome-sandbox
-  chmod 4755 /opt/ps-launcher/chrome-sandbox
-  command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
-fi
-exit 0

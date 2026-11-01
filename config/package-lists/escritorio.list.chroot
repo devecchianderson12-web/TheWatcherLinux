@@ -24,7 +24,7 @@ adwaita-icon-theme
 hicolor-icon-theme
 librsvg2-common
 
-# Aplicaciones obligatorias (RustDesk y LauncherPC entran por config/packages.chroot)
+# Aplicaciones obligatorias (RustDesk y The Watcher entran por config/packages.chroot)
 pcmanfm
 gvfs
 udisks2

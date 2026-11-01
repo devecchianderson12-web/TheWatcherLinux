@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=TheWatcher Linux
+Exec=/usr/local/bin/tw-session

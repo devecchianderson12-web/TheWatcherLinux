@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Construye la ISO de LauncherPC Linux desde cero. Uso: sudo bash build.sh [--clean]
+# Construye la ISO de TheWatcher Linux desde cero. Uso: sudo bash build.sh [--clean]
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK="${LPC_WORK:-$ROOT/work}"
+WORK="${TW_WORK:-$ROOT/work}"
 OUT="$ROOT/out"
 CACHE="$ROOT/cache"
 LOG="$OUT/build.log"
@@ -15,8 +15,8 @@ trap 'printf "\n\033[1;31mLa compilación falló en la línea %s. Ver %s\033[0m\
 
 # Un ZIP abierto en Windows puede dejar CRLF o quitar los permisos de ejecución
 normalize_tree() {
-  find "$ROOT/config" "$ROOT/launcher" -type f -exec sed -i 's/\r$//' {} + -exec chmod 644 {} +
-  find "$ROOT/config" "$ROOT/launcher" -type d -exec chmod 755 {} +
+  find "$ROOT/config" -type f -exec sed -i 's/\r$//' {} + -exec chmod 644 {} +
+  find "$ROOT/config" -type d -exec chmod 755 {} +
   find "$ROOT" -maxdepth 2 -type f -name '*.sh' -not -path "$ROOT/work/*" -exec sed -i 's/\r$//' {} + -exec chmod 755 {} +
 }
 
@@ -50,7 +50,7 @@ run_in_buildroot() {
   apt-get update
   apt-get install -y debootstrap debian-archive-keyring
   local br="$WORK/buildroot"
-  cleanup_buildroot() { umount -lf "$br/src" "$br/lpc-work" "$br/dev/pts" "$br/dev" "$br/sys" "$br/proc" 2>/dev/null || true; }
+  cleanup_buildroot() { umount -lf "$br/src" "$br/tw-work" "$br/dev/pts" "$br/dev" "$br/sys" "$br/proc" 2>/dev/null || true; }
   cleanup_buildroot
   if [ ! -x "$br/usr/bin/apt-get" ]; then
     grep -q " $br/" /proc/mounts && die "Hay montajes activos en $br"
@@ -59,17 +59,17 @@ run_in_buildroot() {
       "$DEBIAN_SUITE" "$br" "$DEBIAN_MIRROR" /usr/share/debootstrap/scripts/sid
   fi
   cp -f /etc/resolv.conf "$br/etc/resolv.conf"
-  mkdir -p "$br/src" "$br/lpc-work"
+  mkdir -p "$br/src" "$br/tw-work"
   trap cleanup_buildroot EXIT
   mount --bind "$ROOT" "$br/src"
   mkdir -p "$WORK/inner"
-  mount --bind "$WORK/inner" "$br/lpc-work"
+  mount --bind "$WORK/inner" "$br/tw-work"
   mount -t proc proc "$br/proc"
   mount -t sysfs sys "$br/sys"
   mount --bind /dev "$br/dev"
   mount --bind /dev/pts "$br/dev/pts"
   chroot "$br" /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin HOME=/root LANG=C.UTF-8 \
-    LPC_INSIDE=1 LPC_WORK=/lpc-work SGDB_KEY="${SGDB_KEY:-}" bash /src/build.sh
+    TW_INSIDE=1 TW_WORK=/tw-work SGDB_KEY="${SGDB_KEY:-}" bash /src/build.sh
 }
 
 install_deps() {
@@ -95,12 +95,6 @@ fetch() {
   echo "Verificado: $(basename "$file")"
 }
 
-launcher_src() {
-  if [ -f "$ROOT/launcherpc/main.js" ]; then echo "$ROOT/launcherpc"
-  elif [ -f "$ROOT/../main.js" ]; then (cd "$ROOT/.." && pwd)
-  else die "No se encontró el código de LauncherPC (launcherpc/main.js)"; fi
-}
-
 configure_lb() {
   say "Configurando la distribución"
   local lb="$WORK/lb"
@@ -123,13 +117,13 @@ configure_lb() {
     --debian-installer live --debian-installer-gui true --debian-installer-distribution "$DEBIAN_SUITE" \
     --chroot-squashfs-compression-type xz \
     --image-name "$DISTRO_ID-$DISTRO_VERSION" \
-    --iso-application "$DISTRO_NAME" --iso-volume "LPC_LINUX_${DISTRO_VERSION//./_}" --iso-publisher "$DISTRO_NAME" \
-    --bootappend-live "boot=live components quiet username=usuario hostname=lpc-linux locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires"
+    --iso-application "$DISTRO_NAME" --iso-volume "THEWATCHER_${DISTRO_VERSION//./_}" --iso-publisher "$DISTRO_NAME" \
+    --bootappend-live "boot=live components quiet username=usuario hostname=thewatcher locales=es_AR.UTF-8 keyboard-layouts=latam timezone=America/Argentina/Buenos_Aires"
   cp -a "$ROOT/config/." "$lb/config/"
   mkdir -p "$lb/config/packages.chroot"
   # live-build solo toma archivos con el nombre *_amd64.deb
   cp "$CACHE/$(basename "$RUSTDESK_URL")" "$lb/config/packages.chroot/rustdesk_${RUSTDESK_VERSION}_amd64.deb"
-  cp "$WORK"/launcher/ps-launcher_*_amd64.deb "$lb/config/packages.chroot/"
+  cp "$ROOT/packages/$THEWATCHER_DEB" "$lb/config/packages.chroot/"
   find "$lb/config" -type f -path '*hooks*' -exec chmod 755 {} +
   find "$lb/config/includes.chroot/usr/local" -type f -exec chmod 755 {} +
   chmod 755 "$lb/config/includes.chroot/etc/X11/icewm/startup"
@@ -152,12 +146,11 @@ verify_iso() {
   xorriso -indev "$iso" -find /EFI -- 2>/dev/null | grep -q EFI || echo "Aviso: la ISO no trae arranque UEFI"
   xorriso -indev "$iso" -find /install -- 2>/dev/null | grep -q install || echo "Aviso: la ISO no trae el instalador"
   local list="$WORK/lb/chroot.packages.live"
-  for p in rustdesk ps-launcher firefox-esr pcmanfm gdebi network-manager icewm; do
+  for p in rustdesk thewatcher firefox-esr pcmanfm gdebi network-manager icewm; do
     grep -q "^$p[[:space:]]" "$list" || die "Falta el paquete obligatorio $p en la ISO"
   done
   mv -f "$iso" "$OUT/"
   cp -f "$list" "$OUT/paquetes-instalados.txt"
-  cp -f "$WORK"/launcher/ps-launcher_*_amd64.deb "$OUT/"
   local final="$OUT/$(basename "$iso")"
   (cd "$OUT" && sha256sum "$(basename "$final")" > "$(basename "$final").sha256")
   say "Terminado"
@@ -165,7 +158,6 @@ verify_iso() {
   echo "Tamaño:   $((size / 1048576)) MB"
   echo "SHA-256:  $final.sha256"
   echo "Paquetes: $OUT/paquetes-instalados.txt"
-  echo "Launcher: $OUT/$(basename "$WORK"/launcher/ps-launcher_*_amd64.deb)"
   [ -z "${SUDO_UID:-}" ] || chown -R "$SUDO_UID:${SUDO_GID:-$SUDO_UID}" "$OUT" "$CACHE"
 }
 
@@ -181,7 +173,7 @@ main() {
   normalize_tree
   : > "$LOG"
   exec > >(tee -a "$LOG") 2>&1
-  if [ -z "${LPC_INSIDE:-}" ] && ! host_is_debian13; then
+  if [ -z "${TW_INSIDE:-}" ] && ! host_is_debian13; then
     run_in_buildroot
     local iso; iso="$(find "$OUT" -maxdepth 1 -name '*.iso' | head -1)"
     [ -n "$iso" ] || die "La compilación no generó ninguna ISO"
@@ -192,10 +184,7 @@ main() {
   say "Preparando el entorno de compilación"
   say "Descargando los componentes desde sus fuentes oficiales"
   fetch "$RUSTDESK_URL" "$RUSTDESK_SHA256"
-  fetch "$ELECTRON_URL" "$ELECTRON_SHA256"
-  say "Empaquetando LauncherPC para Linux"
-  LPC_SRC="$(launcher_src)" CACHE="$CACHE" DEST="$WORK/launcher" ELECTRON_ZIP="$CACHE/$(basename "$ELECTRON_URL")" \
-    bash "$ROOT/launcher/build-deb.sh"
+  echo "$THEWATCHER_SHA256  $ROOT/packages/$THEWATCHER_DEB" | sha256sum -c --status || die "packages/$THEWATCHER_DEB falta o no coincide con versions.env"
   configure_lb
   build_iso
   verify_iso

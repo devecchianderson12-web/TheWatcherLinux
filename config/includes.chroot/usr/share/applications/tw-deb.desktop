@@ -2,7 +2,7 @@
 Type=Application
 Name=Instalar paquete .deb
 Comment=Instala programas desde archivos .deb
-Exec=lpc-deb %f
+Exec=tw-deb %f
 Icon=package-x-generic
 Terminal=false
 Categories=System;

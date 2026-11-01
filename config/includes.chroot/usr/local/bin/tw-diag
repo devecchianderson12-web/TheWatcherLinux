@@ -1,24 +1,23 @@
 #!/bin/bash
 # Diagnóstico del sistema: comprueba los componentes obligatorios y mide el consumo en reposo.
-# Sirve para completar docs/PRUEBAS.md y docs/CONSUMO.md en el equipo real. Uso: lpc-diag [--ventana]
-out="$HOME/lpc-diag.txt"
+# Sirve para completar docs/PRUEBAS.md y docs/CONSUMO.md en el equipo real. Uso: tw-diag [--ventana]
+out="$HOME/tw-diag.txt"
 ok()  { printf '  [ OK ] %s\n' "$1"; }
 bad() { printf '  [FALLA] %s\n' "$1"; }
 has() { command -v "$1" >/dev/null 2>&1 && ok "$2" || bad "$2"; }
 
 report() {
-  echo "=== LauncherPC Linux: diagnóstico $(date '+%F %T') ==="
+  echo "=== TheWatcher Linux: diagnóstico $(date '+%F %T') ==="
   echo "Kernel: $(uname -r)  CPU: $(awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo)"
   echo
   echo "--- Aplicaciones ---"
   has rustdesk "RustDesk $(dpkg-query -W -f='${Version}' rustdesk 2>/dev/null)"
-  has ps-launcher "LauncherPC $(dpkg-query -W -f='${Version}' ps-launcher 2>/dev/null)"
+  has thewatcher "The Watcher $(dpkg-query -W -f='${Version}' thewatcher 2>/dev/null)"
   has firefox-esr "Firefox ESR $(dpkg-query -W -f='${Version}' firefox-esr 2>/dev/null)"
   has pcmanfm "PCManFM"
   has gdebi-gtk "gdebi"
   has nm-applet "Icono de red"
   [ "$(loginctl show-session "$(loginctl list-sessions --no-legend | awk '$3 == "'"$USER"'" {print $1; exit}')" -p Type --value 2>/dev/null)" = x11 ] && ok "Sesión x11 para RustDesk" || bad "Sesión x11 para RustDesk"
-  stat -c '%a' /opt/ps-launcher/chrome-sandbox 2>/dev/null | grep -q 4755 && ok "Sandbox de LauncherPC" || bad "Sandbox de LauncherPC"
   echo
   echo "--- Servicios ---"
   for s in NetworkManager rustdesk systemd-timesyncd lightdm; do
@@ -32,9 +31,6 @@ report() {
   echo
   echo "--- Unidades ---"
   lsblk -o NAME,SIZE,TYPE,TRAN,MOUNTPOINT 2>/dev/null | sed 's/^/  /'
-  echo
-  echo "--- Mandos ---"
-  ls /dev/input/js* 2>/dev/null | sed 's/^/  /' || true
   echo
   echo "--- Gráficos ---"
   lspci -nnk 2>/dev/null | grep -A3 -E 'VGA|3D' | sed 's/^/  /'

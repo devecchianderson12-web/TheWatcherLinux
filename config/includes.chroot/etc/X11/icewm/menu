@@ -1,15 +1,14 @@
-prog "LauncherPC" /usr/share/icons/hicolor/256x256/apps/ps-launcher.png ps-launcher
+prog "The Watcher" /usr/share/icons/hicolor/256x256/apps/thewatcher.png thewatcher
 prog "Navegador" firefox-esr firefox-esr
 prog "RustDesk" rustdesk rustdesk
 prog "Archivos" folder pcmanfm
-prog "Instalar paquete .deb" package-x-generic lpc-deb
+prog "Instalar paquete .deb" package-x-generic tw-deb
 separator
 menuprog "Aplicaciones" folder icewm-menu-fdo
 menu "Sistema" folder {
     prog "Conexiones de red" network-wired nm-connection-editor
     prog "Sonido" multimedia-volume-control pavucontrol
     prog "Terminal" utilities-terminal xterm
-    prog "Actualizar el sistema" system-software-update lpc-update
-    prog "Instalar Steam" steam lpc-install-steam
-    prog "Diagnóstico" dialog-information lpc-diag --ventana
+    prog "Actualizar el sistema" system-software-update tw-update
+    prog "Diagnóstico" dialog-information tw-diag --ventana
 }

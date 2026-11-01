@@ -1,16 +1,16 @@
 # Consumo de RAM y CPU en reposo
 
-Medido el 01/11/2026 en QEMU/KVM con 2 GB de RAM y 2 CPU, en modo Live, con `lpc-diag`. **Es una máquina virtual: en hardware real las cifras pueden variar.**
+Versión 0.1.1, medido el 01/11/2026 en QEMU/KVM con 2 GB de RAM y 2 CPU, en modo Live, con `tw-diag`. **Es una máquina virtual: en hardware real las cifras pueden variar.**
 
 | Medición | Resultado |
 |---|---|
-| RAM usada en reposo | **371 MB** de 1973 MB (`free`, columna usado) |
-| RAM disponible | 1602 MB |
-| CPU en reposo, promedio de 30 s | **1 %** |
-| Procesos | 118 |
-| Arranque hasta el modo gráfico | **9,7 s** (kernel 3,2 s + sistema 6,4 s) |
-| RAM usada con Firefox y una página | 911 MB |
-| RAM usada con LauncherPC abierto | 666 MB |
+| RAM usada en reposo | **357 MB** de 1973 MB (`free`, columna usado) |
+| RAM disponible | 1615 MB |
+| CPU en reposo, promedio de 30 s | **2 %** |
+| Procesos | 125 |
+| Arranque hasta el modo gráfico | **11,8 s** (kernel 4,3 s + sistema 7,5 s) |
+| RAM usada con Firefox y una página | 889 MB |
+| RAM usada con The Watcher abierto, sin cámaras | 526 MB |
 
 En modo Live parte de los archivos ocupa memoria caché. No está incluido en el valor "usado".
 
@@ -20,8 +20,8 @@ Valores RSS, que cuentan dos veces la memoria compartida.
 
 | Proceso | MB |
 |---|---|
-| Xorg | 98,5 |
-| nm-applet | 92,9 |
+| Xorg | 96,8 |
+| nm-applet | 93,2 |
 | RustDesk (3 procesos) | 64,3 + 53,3 + 37,0 |
 | NetworkManager | 19,4 |
 | wireplumber | 16,0 |
@@ -37,4 +37,4 @@ sudo systemctl disable --now rustdesk
 
 ## Repetir la medición
 
-Menú > Sistema > **Diagnóstico**. El resultado queda en `~/lpc-diag.txt`.
+Menú > Sistema > **Diagnóstico**. El resultado queda en `~/tw-diag.txt`.
