@@ -2,7 +2,7 @@
 
 Distribución Linux ultraligera basada en **Debian 13 (trixie) de 64 bits**, con escritorio IceWM, NetworkManager, The Watcher (visor de cámaras RTSP/ONVIF), RustDesk, Firefox ESR, PCManFM e instalador gráfico de `.deb`.
 
-> **Estado:** versión 0.1.1, compilada y probada en máquina virtual. Instalador en disco, Wi-Fi y conexión real de RustDesk siguen sin probar: ver [docs/PRUEBAS.md](docs/PRUEBAS.md). La ISO está en [Releases](../../releases).
+> **Estado:** versión 0.1.2, compilada y probada en máquina virtual. Instalador en disco, Wi-Fi y conexión real de RustDesk siguen sin probar: ver [docs/PRUEBAS.md](docs/PRUEBAS.md). La ISO está en [Releases](../../releases).
 
 ## 1. Qué necesitás
 
@@ -84,7 +84,7 @@ sudo bash build.sh --clean
 
 | Archivo | Contenido |
 |---|---|
-| `out/thewatcher-linux-0.1.1-amd64.hybrid.iso` | La ISO |
+| `out/thewatcher-linux-0.1.2-amd64.hybrid.iso` | La ISO |
 | `out/*.sha256` | Suma de comprobación |
 | `out/paquetes-instalados.txt` | Lista exacta de paquetes y versiones |
 | `out/build.log` | Registro completo |
@@ -97,7 +97,7 @@ Esto **borra todo el pendrive**.
 - **Linux:** buscá el dispositivo con `lsblk` y reemplazá `/dev/sdX`:
 
 ```bash
-sudo dd if=out/thewatcher-linux-0.1.1-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if=out/thewatcher-linux-0.1.2-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
 ## 7. Probar en una máquina virtual
@@ -107,7 +107,7 @@ sudo dd if=out/thewatcher-linux-0.1.1-amd64.hybrid.iso of=/dev/sdX bs=4M status=
 **QEMU:**
 
 ```bash
-qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 -cdrom out/thewatcher-linux-0.1.1-amd64.hybrid.iso -vga virtio -nic user,model=virtio-net-pci
+qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 -cdrom out/thewatcher-linux-0.1.2-amd64.hybrid.iso -vga virtio -nic user,model=virtio-net-pci
 ```
 
 ## 8. Usar el sistema

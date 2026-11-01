@@ -21,7 +21,7 @@ jobs:
           last=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
           case "$last" in
             *.*.*) v="${last%.*}.$((${last##*.} + 1))" ;;
-            *) v=0.1.1 ;;
+            *) v=0.1.2 ;;
           esac
           echo "Versión: $v"
           if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "v=$v" >> "$GITHUB_OUTPUT"; fi

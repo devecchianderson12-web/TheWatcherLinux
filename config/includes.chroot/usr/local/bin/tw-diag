@@ -27,6 +27,9 @@ report() {
   echo
   echo "--- Red ---"
   nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null | sed 's/^/  /'
+  nmcli radio 2>/dev/null | sed 's/^/  /'
+  rfkill list 2>/dev/null | sed 's/^/  /'
+  ls /usr/lib/firmware/regulatory.db* >/dev/null 2>&1 && ok "Reglas Wi-Fi" || bad "Reglas Wi-Fi"
   curl -fsS -m 8 -o /dev/null https://deb.debian.org/ && ok "HTTPS a Internet" || bad "HTTPS a Internet"
   echo
   echo "--- Unidades ---"

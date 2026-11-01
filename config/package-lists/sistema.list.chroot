@@ -28,6 +28,8 @@ network-manager
 network-manager-gnome
 wpasupplicant
 iw
+wireless-regdb
+rfkill
 
 # Microcódigo y firmware de Wi-Fi y gráficos (hardware antiguo incluido)
 intel-microcode

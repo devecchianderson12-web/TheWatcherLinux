@@ -1,15 +1,15 @@
 # Registro de pruebas
 
-Versión 0.1.1, 01/11/2026. La ISO se compiló con `build.sh` en WSL2 con Debian 13 y se probó con `tests/boot-test.py` en QEMU/KVM (2 GB de RAM, 2 CPU, e1000, pantalla virtual sin GPU real). **No se probó en hardware físico.**
+Versión 0.1.2, 01/11/2026. La ISO se compiló con `build.sh` en WSL2 con Debian 13 y se probó con `tests/boot-test.py` en QEMU/KVM (2 GB de RAM, 2 CPU, e1000, pantalla virtual sin GPU real). **No se probó en hardware físico.**
 
 ## Pruebas exigidas
 
 | # | Prueba | Resultado | Detalle |
 |---|---|---|---|
-| 1 | La ISO arranca | **Correcto en VM** | Menú de arranque visto en BIOS y UEFI (OVMF). Sistema completo arrancado en 11,8 s |
+| 1 | La ISO arranca | **Correcto en VM** | Menú de arranque visto en BIOS y UEFI (OVMF). Sistema completo arrancado en 10,1 s |
 | 2 | Entorno gráfico | **Correcto en VM** | IceWM, barra, accesos y bandeja |
 | 3 | Ethernet | **Correcto en VM** | DHCP automático, HTTPS 200 |
-| 4 | Wi-Fi | **No probado** | La VM no tiene Wi-Fi |
+| 4 | Wi-Fi | **Parcial** | Red WPA2 simulada con `tests/wifi-test.py`: conecta por consola y obtiene IP. **En dos equipos reales falló en 0.1.1, sin causa confirmada** |
 | 5 | RustDesk abre | **Correcto en VM** | Muestra ID y contraseña, estado "Listo", sesión x11 aceptada |
 | 6 | RustDesk conecta | **No probado** | Hace falta una conexión real entre dos equipos |
 | 7 | Instalar `.deb` | **Parcial** | `gdebi -n` instaló un paquete y su dependencia faltante. La ventana gráfica no se probó |

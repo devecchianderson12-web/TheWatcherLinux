@@ -48,4 +48,4 @@ Versiones disponibles en Debian 13.7 al 31/10/2026. Salvo RustDesk y The Watcher
 
 ## Tamaño
 
-La ISO 0.1.1 mide **1301 MB**.
+La ISO 0.1.2 mide **1301 MB**.
