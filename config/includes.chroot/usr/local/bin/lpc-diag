@@ -1,0 +1,57 @@
+#!/bin/bash
+# Diagnóstico del sistema: comprueba los componentes obligatorios y mide el consumo en reposo.
+# Sirve para completar docs/PRUEBAS.md y docs/CONSUMO.md en el equipo real. Uso: lpc-diag [--ventana]
+out="$HOME/lpc-diag.txt"
+ok()  { printf '  [ OK ] %s\n' "$1"; }
+bad() { printf '  [FALLA] %s\n' "$1"; }
+has() { command -v "$1" >/dev/null 2>&1 && ok "$2" || bad "$2"; }
+
+report() {
+  echo "=== LauncherPC Linux: diagnóstico $(date '+%F %T') ==="
+  echo "Kernel: $(uname -r)  CPU: $(awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo)"
+  echo
+  echo "--- Aplicaciones ---"
+  has rustdesk "RustDesk $(dpkg-query -W -f='${Version}' rustdesk 2>/dev/null)"
+  has ps-launcher "LauncherPC $(dpkg-query -W -f='${Version}' ps-launcher 2>/dev/null)"
+  has firefox-esr "Firefox ESR $(dpkg-query -W -f='${Version}' firefox-esr 2>/dev/null)"
+  has pcmanfm "PCManFM"
+  has gdebi-gtk "gdebi"
+  has nm-applet "Icono de red"
+  stat -c '%a' /opt/ps-launcher/chrome-sandbox 2>/dev/null | grep -q 4755 && ok "Sandbox de LauncherPC" || bad "Sandbox de LauncherPC"
+  echo
+  echo "--- Servicios ---"
+  for s in NetworkManager rustdesk systemd-timesyncd; do
+    systemctl is-active --quiet "$s" && ok "$s activo" || bad "$s inactivo"
+  done
+  swapon --noheadings --show=NAME 2>/dev/null | grep -q zram && ok "zram activo" || bad "zram inactivo"
+  echo
+  echo "--- Red ---"
+  nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null | sed 's/^/  /'
+  curl -fsS -m 8 -o /dev/null https://deb.debian.org/ && ok "HTTPS a Internet" || bad "HTTPS a Internet"
+  echo
+  echo "--- Unidades ---"
+  lsblk -o NAME,SIZE,TYPE,TRAN,MOUNTPOINT 2>/dev/null | sed 's/^/  /'
+  echo
+  echo "--- Mandos ---"
+  ls /dev/input/js* 2>/dev/null | sed 's/^/  /' || true
+  echo
+  echo "--- Gráficos ---"
+  lspci -nnk 2>/dev/null | grep -A3 -E 'VGA|3D' | sed 's/^/  /'
+  echo
+  echo "--- Consumo (promedio de 30 s, sin tocar nada) ---"
+  read -r _ u1 n1 s1 i1 w1 x1 y1 z1 _ < /proc/stat
+  sleep 30
+  read -r _ u2 n2 s2 i2 w2 x2 y2 z2 _ < /proc/stat
+  local busy=$(( (u2+n2+s2+x2+y2+z2) - (u1+n1+s1+x1+y1+z1) )) idle=$(( (i2+w2) - (i1+w1) ))
+  echo "  CPU: $(( 100 * busy / (busy + idle) )) %"
+  free -m | sed 's/^/  /'
+  echo "  Procesos: $(ps -e --no-headers | wc -l)"
+  ps -eo rss=,comm= --sort=-rss | head -12 | awk '{printf "  %6.1f MB  %s\n", $1 / 1024, $2}'
+  echo
+  systemd-analyze 2>/dev/null | sed 's/^/  /'
+}
+
+if [ "${1:-}" = --ventana ]; then
+  exec xterm -T Diagnóstico -geometry 100x40 -e bash -c "'$0' | tee '$out'; echo; echo 'Guardado en $out. Pulsá Enter para cerrar'; read x"
+fi
+report | tee "$out"

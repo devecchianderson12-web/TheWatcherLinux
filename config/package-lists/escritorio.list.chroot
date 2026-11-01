@@ -1,0 +1,39 @@
+# Servidor gráfico. legacy: los drivers vesa y fbdev de equipos antiguos necesitan root
+xserver-xorg-core
+xserver-xorg-legacy
+xserver-xorg-input-all
+xserver-xorg-video-all
+xinit
+xauth
+x11-xserver-utils
+x11-utils
+libgl1-mesa-dri
+libegl1
+libgles2
+
+# Escritorio: IceWM trae en un solo proceso barra, menú, ventanas y apagado
+icewm
+xterm
+xdg-utils
+shared-mime-info
+fonts-dejavu-core
+fonts-liberation
+adwaita-icon-theme
+hicolor-icon-theme
+librsvg2-common
+
+# Aplicaciones obligatorias (RustDesk y LauncherPC entran por config/packages.chroot)
+pcmanfm
+gvfs
+udisks2
+gdebi
+lxpolkit
+firefox-esr
+firefox-esr-l10n-es-ar
+libavcodec61
+libayatana-appindicator3-1
+
+# Utilidades mínimas
+l3afpad
+gpicview
+zenity

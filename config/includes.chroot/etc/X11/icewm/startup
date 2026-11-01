@@ -1,0 +1,9 @@
+#!/bin/sh
+# Lo único que queda residente en la sesión además de IceWM: el icono de red
+nm-applet &
+# Lo que el usuario activó, por ejemplo Ajustes > Iniciar con el sistema en LauncherPC
+for f in "$HOME"/.config/autostart/*.desktop; do
+  [ -f "$f" ] || continue
+  cmd=$(sed -n 's/^Exec=//p' "$f" | head -1)
+  [ -n "$cmd" ] && sh -c "$cmd" &
+done

@@ -1,0 +1,15 @@
+prog "LauncherPC" ps-launcher ps-launcher
+prog "Navegador" firefox-esr firefox-esr
+prog "RustDesk" rustdesk rustdesk
+prog "Archivos" system-file-manager pcmanfm
+prog "Instalar paquete .deb" package-x-generic lpc-deb
+separator
+menuprog "Aplicaciones" folder icewm-menu-fdo
+menu "Sistema" folder {
+    prog "Conexiones de red" network-wired nm-connection-editor
+    prog "Sonido" multimedia-volume-control pavucontrol
+    prog "Terminal" utilities-terminal xterm
+    prog "Actualizar el sistema" system-software-update lpc-update
+    prog "Instalar Steam" steam lpc-install-steam
+    prog "Diagnóstico" dialog-information lpc-diag --ventana
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Agente de contraseñas solo cuando hace falta: no queda en memoria durante el uso normal
+pgrep -u "$(id -u)" -x lxpolkit >/dev/null || { /usr/bin/lxpolkit >/dev/null 2>&1 & sleep 1; }

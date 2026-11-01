@@ -1,0 +1,18 @@
+=== LauncherPC-Linux-1.0 (Build ISO LauncherPC Linux) ===
+workflow: C:\Users\Anderson\Desktop\LauncherPC-Linux-1.0\.github\workflows\build-iso.yml
+salida:   C:\Users\Anderson\Desktop\LauncherPC-Linux-1.0\20261031-230021
+Preparando copia limpia del proyecto (como el checkout de GitHub)...
+Copia lista: 65 archivos
+
+##### Job: iso
+
+--- paso 1: omitido (el repo ya est√° en local)
+
+--- Compilar la ISO (bash)
+AVISO: SpringCompiler no conoce 'secrets.SGDB_KEY' (se reemplaza por vac√≠o).
+Windows: se compila con WSL2 (build.ps1)
+Falta WSL2 con Debian. En una PowerShell de administrador ejecut†:
+  wsl --install -d Debian
+Reinici† si lo pide, abr° Debian una vez para crear tu usuario y volvÇ a ejecutar este script.
+
+FALL√ì en 'Compilar la ISO': exit status 1

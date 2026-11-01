@@ -1,0 +1,9 @@
+#!/bin/sh
+# El postinst de RustDesk solo instala su servicio si /proc/1/exe es systemd. Dentro del chroot depende del sistema
+# que compila (en WSL no lo es), así que se deja instalado siempre. Sin el servicio no hay acceso remoto entrante.
+set -e
+[ -x /usr/share/rustdesk/rustdesk ] || { echo "RustDesk no está instalado" >&2; exit 1; }
+ln -sf /usr/share/rustdesk/rustdesk /usr/bin/rustdesk
+mkdir -p /usr/lib/systemd/system
+sed 's|ExecStop=pkill|ExecStop=/usr/bin/pkill|' /usr/share/rustdesk/files/systemd/rustdesk.service > /usr/lib/systemd/system/rustdesk.service
+systemctl enable rustdesk.service

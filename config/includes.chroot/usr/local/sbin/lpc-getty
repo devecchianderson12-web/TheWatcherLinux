@@ -1,0 +1,10 @@
+#!/bin/sh
+# Inicio de sesión automático del primer usuario. Vale para el Live y para el sistema instalado, donde el nombre lo elige
+# el instalador. Sin gestor de pantalla se ahorran unos 30 MB. Se desactiva creando /etc/lpc/no-autologin.
+tty=$1
+term=${2:-linux}
+user=$(awk -F: '$3 >= 1000 && $3 < 60000 && $7 !~ /(nologin|false)$/ { print $1; exit }' /etc/passwd)
+if [ -n "$user" ] && [ ! -e /etc/lpc/no-autologin ]; then
+  exec /sbin/agetty -o '-p -f -- \u' --noclear --autologin "$user" "$tty" "$term"
+fi
+exec /sbin/agetty -o '-p -- \u' --noclear "$tty" "$term"

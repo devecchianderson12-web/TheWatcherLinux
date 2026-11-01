@@ -1,0 +1,12 @@
+[Default Applications]
+application/vnd.debian.binary-package=lpc-deb.desktop
+application/x-deb=lpc-deb.desktop
+inode/directory=pcmanfm.desktop
+text/plain=l3afpad.desktop
+image/jpeg=gpicview.desktop
+image/png=gpicview.desktop
+image/gif=gpicview.desktop
+image/webp=gpicview.desktop
+text/html=firefox-esr.desktop
+x-scheme-handler/http=firefox-esr.desktop
+x-scheme-handler/https=firefox-esr.desktop

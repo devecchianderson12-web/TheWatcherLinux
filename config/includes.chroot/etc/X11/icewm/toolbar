@@ -1,0 +1,4 @@
+prog "LauncherPC" ps-launcher ps-launcher
+prog "Navegador" firefox-esr firefox-esr
+prog "RustDesk" rustdesk rustdesk
+prog "Archivos" system-file-manager pcmanfm
